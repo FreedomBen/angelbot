@@ -18,13 +18,15 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def translate_jiras(slack_connection, user, channel, message)
-    extract_jiras(message).each do |jira|
-      slack_connection.send_message(
-        channel: channel,
-        message: "#{jira[:prefix]}-#{jira[:number]} is #{jira_url(jira[:prefix], jira[:number])}"
-      )
+    message = extract_jiras(message).map do |jira|
       log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
-    end
+
+      "<#{jira_url(jira[:prefix], jira[:number])}|#{jira[:prefix]}-#{jira[:number]}>"
+    end.join(', ')
+
+    message = ':hoff:' if Random.rand(200) == 0
+
+    slack_connection.send_message(channel: channel, message: message, parse: 'none') unless message.empty?
   end
 
   def log_info(message)
