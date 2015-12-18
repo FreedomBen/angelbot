@@ -46,7 +46,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def extract_jiras(str)
-    str.scan(/(CNVS|TD|MBL)-(\d+)/i).map do |prefix, num|
+    str.scan(/(CNVS|TD|MBL|OPS|SD)-(\d+)/i).map do |prefix, num|
       { prefix: prefix.upcase, number: num }
     end.uniq
   end
@@ -57,8 +57,8 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def contains_jiras(str)
-    # CNVS-12345 || TD-12345 || MBL-4322
-    str.downcase =~ /(^|\s)(CNVS|TD|MBL)-\d{1,9}[.!?,;]*($|\s)/i
+    # CNVS-12345 || TD-12345 || MBL-432 || OPS || SD
+    str.downcase =~ /(^|\s)(CNVS|TD|MBL|OPS|SD)-\d{1,9}[.!?,;]*($|\s)/i
   end
 
   def gerrit_url(gerr_num)
