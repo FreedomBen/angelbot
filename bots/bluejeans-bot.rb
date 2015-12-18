@@ -80,7 +80,7 @@ class BluejeansBot < SlackbotFrd::Bot
 
   def add_callbacks(slack_connection)
     slack_connection.on_message do |user:, channel:, message:, timestamp:|
-      if message && user != :bot && user != 'angel' && bluejeans?(message)
+      if message && user != :bot && user != 'angel' && bluejeans?(message) && !(message.split.count > 2)
         SlackbotFrd::Log.info(
           "Bluejeans bot: request for '#{message}' from user '#{user}' in channel '#{channel}'"
         )
