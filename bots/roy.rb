@@ -18,6 +18,7 @@ class Roy < SlackbotFrd::Bot
             username: "Roy",
             avatar_emoji: ":roy:"
           )
+          slack_connection.post_reaction(name: 'roy', channel: channel, timestamp: timestamp)
         end
       end
     end
