@@ -19,7 +19,7 @@ class Moss < SlackbotFrd::Bot
   EMERGENCY_MESSAGES = [
     '"Dir sir/madam, FIRE!"',
     '"Is this the emergency services? Then which country am I speaking to?"',
-    "> \"Subject: Fire. Dear Sir/Madam, I am writing to inform you of a fire that has broken out on the premises of 6330 S 3000 E... no, that's too formal.\"\n[deletes text, starts again]\n\> \"Fire - exclamation mark - fire - exclamation mark - help me - exclamation mark. 123 Cavendon Road. Looking forward to hearing from you. Yours truly, Maurice Moss.\""
+    "> \"Subject: Fire. Dear Sir/Madam, I am writing to inform you of a fire that has broken out on the premises of 6330 S 3000 E... no, that's too formal.\"\n[deletes text, starts again]\n\> \"Fire - exclamation mark - fire - exclamation mark - help me - exclamation mark. 6330 S 3000 E. Looking forward to hearing from you. Yours truly, Maurice Moss.\""
   ].map!{|input| "#{input}\n\nIt's fine. I've sent an email."}.freeze
 
   NORMAL_MESSAGES = [
