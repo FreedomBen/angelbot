@@ -1,6 +1,16 @@
 require 'slackbot_frd'
 
+require_relative '../lib/jira/issue'
+
 class GerritJiraTranslator < SlackbotFrd::Bot
+  def priority_to_emoji(priority)
+    {
+      "maintenance" => ":jira_maintenance_priority:",
+      "pressing"    => ":jira_pressing_priority:",
+      "critical"    => ":jira_critical_priority:",
+    }[priority.downcase]
+  end
+
   def add_callbacks(slack_connection)
     slack_connection.on_message do |user:, channel:, message:, timestamp:|
       if message && user != :bot && user != 'angel'
@@ -23,13 +33,23 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def translate_jiras(slack_connection, user, channel, message)
+    issue_api = Jira::Issue.new(
+      username: $slackbotfrd_conf["jira_username"],
+      password: $slackbotfrd_conf["jira_password"]
+    )
     jiras = extract_jiras(message).map do |jira|
       log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
+      issue = issue_api.get(jira[:id])
 
-      "<#{jira_url(jira[:prefix], jira[:number])}|#{jira[:prefix]}-#{jira[:number]}>"
+      ":jira: <#{jira_url(jira[:prefix], jira[:number])}|#{jira[:prefix]}-#{jira[:number]}>  " \
+      "#{priority_to_emoji(issue["fields"]["priority"]["name"]) || ''}\n" \
+      "          *Summary:*  #{issue["fields"]["summary"]}\n" \
+      "          *Component(s)*:  #{issue["fields"]["components"].map{|c| c["name"]}.join(", ")}\n" \
+      "          *Status:*  #{issue["fields"]["status"]["name"]}\n" \
+      "          *Assigned to*:  #{issue["fields"]["assignee"]["displayName"]}"
     end
 
-    message = ":jira: :  #{jiras.join('  |  ')}"
+    message = jiras.join("\n")
 
     slack_connection.send_message(channel: channel, message: message, parse: 'none') unless message.empty?
   end
