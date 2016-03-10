@@ -1,9 +1,10 @@
 require 'slackbot_frd'
+require 'fuzzy_match'
 
 class Roy < SlackbotFrd::Bot
   TIME_FILE = '/tmp/it-roybot-time-file.txt'
-  OPEN_EXAMPLE = 'roy: please open a service request for something that is wrong'
-  TICKET_REGEX = /roy:?\s+.*(request|ticket)\s+for\s+(.*)/i
+  OPEN_EXAMPLE = 'roy: ticket for <summary of the problem>'
+  TICKET_REGEX = /^roy:\s+ticket\s+for\s+(.*)/i
 
   def desired_channel?(channel)
     %w[it bps_test_graveyard].include?(channel)
@@ -36,7 +37,7 @@ class Roy < SlackbotFrd::Bot
   end
 
   def ticket_summary(message)
-    message.match(TICKET_REGEX).captures[1]
+    message.match(TICKET_REGEX).captures.first
   end
 
   def response(user:, message:)
@@ -46,16 +47,17 @@ class Roy < SlackbotFrd::Bot
       SlackbotFrd::Log.info("User '#{user}' is opening an IT ticket through Roy. message: '#{message}'")
       return process_ticket(user: user, message: message)
     elsif m.include?('roy') || m.include?('<!channel') || m.include?('<!group') || m.include?('<!here')
-      return "Hello, IT, have you tried turning it off and on again?\n\n" \
-             "If you need me to open a ticket for you, type something like: \n" \
-             "```#{OPEN_EXAMPLE}```"
-    elsif m =~ /ticket/ && ((m =~ /file/) || (m =~ /is/ && m =~ /there/) || (m =~ /submit/) || (m =~ /open/)) && time_expired?
-      capture_time
+      return "Hello, IT, have you tried turning it off and on again?" #\n\n" \
+             #"If you need me to open a ticket for you, type something like: \n" \
+             #"```#{OPEN_EXAMPLE}```"
+    elsif m =~ /ticket/ && ((m =~ /file/) || (m =~ /is/ && m =~ /there/) || (m =~ /submit/) || (m =~ /open/))# && time_expired?
+      #capture_time
       # submit ticket
       # open ticket
       # file ticket
       # is there ticket
-      return "No ticket?\n\nhttp://i.imgur.com/avwx7Zj.gif\nhttp://media.giphy.com/media/CHROEms0iVuda/giphy.gif\n\nYou can open a ticket through me by typing something like:\n```#{OPEN_EXAMPLE}```"
+      #return "No ticket?\n\nhttp://i.imgur.com/avwx7Zj.gif\nhttp://media.giphy.com/media/CHROEms0iVuda/giphy.gif\n\nYou can open a ticket through me by typing something like:\n```#{OPEN_EXAMPLE}```"
+      return "Need to open a ticket?  You can open a ticket at http://servicedesk.instructure.com or through me by typing:\n```#{OPEN_EXAMPLE}```"
     end
     nil
   end
@@ -64,21 +66,24 @@ class Roy < SlackbotFrd::Bot
     summary = ticket_summary(message)
     SlackbotFrd::Log.debug("User '#{user}' provided summary '#{summary}' from message '#{message}'")
     return "Can't open a ticket with a blank summary!" if summary.empty?
+    # issue_type = ticket_type(summary)
+    issue_type = "Service Request - Other"
     issue = Jira::Issue.new(
       username: $slackbotfrd_conf['jira_username'],
       password: $slackbotfrd_conf['jira_password']
     ).create(
       project: 'ITSD',
-      issue_type: 'Service Request',
+      issue_type: issue_type,
       summary: summary,
       description: "Request opened by slack user '#{user}' through Roy"
     )
-    SlackbotFrd::Log.debug("Jira issue creation return val: '#{issue}'")
+    SlackbotFrd::Log.debug("Jira issue creation under issue type '#{issue_type}' return val: '#{issue}'")
     if issue.key?('key')
-      return "Excellent!  I opened up <#{jira_link_url(issue['key'])}|#{issue['key']}> for you"
+      return "Excellent!  I opened up <#{jira_link_url(issue['key'])}|#{issue['key']}> " \
+      "for you under Issue Type '#{issue_type}'.  Please add any relevant details I may have missed."
     else
-      SlackbotFrd::Log.warn("Problem creating issue in jira: '#{issue}'")
-      return ":doh: something went wrong :nope: .  I guess you have " \
+      SlackbotFrd::Log.warn("Problem creating issue under issue type '#{issue_type}' in jira: '#{issue}'")
+      return ":doh: something went wrong :nope: opening issue type '#{issue_type}'.  I guess you have " \
              "to do it manually.  Go to http://servicedesk.instructure.com " \
              "and click the 'IT Support' button."
     end
@@ -96,5 +101,41 @@ class Roy < SlackbotFrd::Bot
 
   def capture_time
     File.write(TIME_FILE, { time: Time.now.to_i }.to_json)
+  end
+
+  def ticket_types
+    [
+      'Service Request - Access',
+      'Service Request - Email',
+      'Service Request - Hardware',
+      'Service Request - Network',
+      'Service Request - Other',
+      'Service Request - Phone',
+      'Service Request - Software',
+      'Service Request - Employee - New',
+      'Service Request - Employee - Terminate',
+      'Service Request - Employee - Transfer',
+      'Service Request - Employee - Name Change/Update',
+      'Service Request - Meeting Audio/Video Assistance',
+      'Service Request - Site Admin',
+      'Service Request - New Tier One Toll Free Number',
+      'Service Request - Printer',
+      'Service Request - First Day Equipment',
+      'Audit Information Request (SOC2 / SOX)',
+      'Application Access De-provision',
+      'Application Access Provision',
+      'Information Request',
+      'Incident',
+      'Other',
+      'Purchase',
+      'Purchase Request',
+      'Problem',
+      'Change'
+    ]
+  end
+
+  def ticket_type(message)
+    @fuzzy_match ||= FuzzyMatch.new(ticket_types)
+    @fuzzy_match.find(message)
   end
 end

@@ -30,11 +30,10 @@ class BluejeansBot < SlackbotFrd::Bot
     "https://bluejeans.com/#{id}"
   end
 
-  def assembled_message(room_name:, room_id:, link:, audio_code:)
-    "*#{room_name}*: :bluejeans: #{bj_url(link.empty? ? room_id : link)}\n" \
+  def assembled_message(room_name:, room_id:, link:)
+    "*#{room_name}*: :bluejeans: #{bj_url(link)}\n" \
     "     Phone: #{BJ_PHONE.first}\n" \
-    "     Meeting ID: #{room_id}\n" \
-    "     Audio Code: #{audio_code}"
+    "     Meeting ID: #{room_id}"
   end
 
   def bluejeans?(message)
@@ -66,13 +65,18 @@ class BluejeansBot < SlackbotFrd::Bot
   end
 
   def send_info(slack_connection, channel, k, quiet)
+    room_id = BLUEJEANS[k]['number']
+    link = if BLUEJEANS[k]['link'].empty?
+             room_id
+           else
+             "instructure.#{BLUEJEANS[k]['link']}"
+           end
     slack_connection.send_message(
       channel: channel,
       message: assembled_message(
         room_name: k,
-        room_id: BLUEJEANS[k]['number'],
-        link: "instructure.#{BLUEJEANS[k]['link']}",
-        audio_code: BLUEJEANS[k]["audio_code"]
+        room_id: room_id,
+        link: link
       ),
       channel_is_id: quiet
     )

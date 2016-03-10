@@ -1,19 +1,100 @@
 require 'slackbot_frd'
+require 'securerandom'
 
 require_relative '../lib/jira/issue'
+require_relative '../lib/gerrit/change'
+
+require_relative '../lib/gerrit-jira-translator/data'
 
 class GerritJiraTranslator < SlackbotFrd::Bot
   def add_callbacks(slack_connection)
     slack_connection.on_message do |user:, channel:, message:, timestamp:|
       if message && user != :bot && user != 'angel'
-        translate_gerrits(slack_connection, user, channel, message) if contains_gerrits(message)
-        translate_jiras(slack_connection, user, channel, message)   if contains_jiras(message)
+        if contains_command(message)
+          handle_command(slack_connection, user, channel, message)
+        elsif contains_gerrits(message) || contains_jiras(message)
+          handle_gerrits_jiras(slack_connection, user, channel, message)
+        end
       end
     end
   end
 
+  def handle_command(slack_connection, user, channel, message)
+    data = GerritJiraData.new(channel: channel)
+    message = if contains_read_settings_command(message)
+                SlackbotFrd::Log.debug(
+                  "user '#{user}' in channel '#{channel}' is reading settings"
+                )
+                data.channel_settings.to_json
+              elsif contains_set_settings_command(message)
+                SlackbotFrd::Log.debug(
+                  "user '#{user}' in channel '#{channel}' is changing settings: '#{message}'"
+                )
+                handle_set_settings_command(data, message)
+              end
+    send_msg(sc: slack_connection, channel: channel, message: message)
+  end
+
+  def handle_set_settings_command(data, message)
+    _, key, val = command_key_val(message)
+
+    return "'#{key}' is not a valid attribute" unless data.valid_keys.include?(key)
+    return "'#{val}' is not a valid value for '#{key}'. Try one of #{data.valid_vals(key)}" unless data.valid_vals(key).include?(val)
+
+    begin
+      new_data = data.channel_settings
+      prev_data = new_data.dup
+      changed = new_data.changes?(key, val)
+      new_data.set(key, val)
+      data.set_channel_prefs(new_data)
+      new_data = data.retrieve_channel_settings
+      message = "New settings for channel '##{data.channel}': #{new_data.to_json}"
+      if changed && new_data.equals?(prev_data)
+        message = "#{message}\nOh no!  It looks like your changes didn't take :disappointed:"
+      end
+      return message
+    rescue => err
+      "Whoa, something went wrong over here :grimacing:\n```#{err.message}```"
+    end
+  end
+
+  def handle_gerrits_jiras(slack_connection, user, channel, message)
+    data = GerritJiraData.new(channel: channel)
+    if data.show?
+      SlackbotFrd::Log.debug("channel '#{channel}' has gerrit/jiras turned on")
+      translate_gerrits(slack_connection, user, channel, message) if contains_gerrits(message)
+      translate_jiras(slack_connection, user, channel, message, data)   if contains_jiras(message)
+    else
+      SlackbotFrd::Log.debug(
+        "Ignoring gerrit/jiras in channel '#{channel}' because " \
+        'it has gerrit/jiras turned off'
+      )
+    end
+  end
+
   def translate_gerrits(slack_connection, user, channel, message)
-    gerrits = extract_gerrits(message).map do |gn|
+    extracted_gerrits = extract_gerrits(message)
+    if extracted_gerrits.count == 1
+      translate_single_gerrits(extracted_gerrits.first, slack_connection, user, channel, message)
+    else
+      translate_multiple_gerrits(extracted_gerrits, slack_connection, user, channel, message)
+    end
+  end
+
+  def translate_single_gerrits(extracted_gerrit, sc, user, channel, message)
+    change_api = Gerrit::Change.new(
+      username: $slackbotfrd_conf["gerrit_username"],
+      password: $slackbotfrd_conf["gerrit_password"]
+    )
+    log_info("Translated g/#{extracted_gerrit} for user '#{user}' in channel '#{channel}'")
+
+    msg = build_single_line_gerrit_str(extracted_gerrit, change_api.get(extracted_gerrit))
+    #msg = build_full_gerrit_str(extracted_gerrit, change_api.get(extracted_gerrit))
+    send_msg(sc: sc, channel: channel, message: msg, parse: 'none')
+  end
+
+  def translate_multiple_gerrits(extracted_gerrits, sc, user, channel, message)
+    gerrits = extracted_gerrits.map do |gn|
       log_info("Translated g/#{gn} for user '#{user}' in channel '#{channel}'")
 
       "<#{gerrit_url(gn)}|g/#{gn}>"
@@ -21,10 +102,22 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
     message = ":gerrit: :  #{gerrits.join('  |  ')}"
 
-    slack_connection.send_message(channel: channel, message: message, parse: 'none')
+    send_msg(sc: sc, channel: channel, message: message, parse: 'none')
   end
 
-  def translate_jiras(slack_connection, user, channel, message)
+  def translate_jiras(slack_connection, user, channel, message, data)
+    message = if data.channel_full?
+                translate_full_jiras(slack_connection, user, channel, message)
+              elsif data.channel_abbrev?
+                translate_abbrev_jiras(slack_connection, user, channel, message)
+              else
+                ''
+              end
+
+    send_msg(sc: slack_connection, channel: channel, message: message, parse: 'none')
+  end
+
+  def translate_full_jiras(slack_connection, user, channel, message)
     issue_api = Jira::Issue.new(
       username: $slackbotfrd_conf["jira_username"],
       password: $slackbotfrd_conf["jira_password"]
@@ -32,12 +125,39 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     jiras = extract_jiras(message).map do |jira|
       log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
 
-      build_jira_str(jira, issue_api.get(jira[:id]))
+      build_full_jira_str(jira, issue_api.get(jira[:id]))
     end
 
-    message = jiras.join("\n")
+    jiras.join("\n")
+  end
 
-    slack_connection.send_message(channel: channel, message: message, parse: 'none') unless message.empty?
+  def translate_abbrev_jiras(slack_connection, user, channel, message)
+    extracted_jiras = extract_jiras(message)
+    if extracted_jiras.count == 1
+      translate_single_abbrev_jira(extracted_jiras.first, slack_connection, user, channel)
+    else
+      translate_multiple_abbrev_jiras(extracted_jiras, slack_connection, user, channel)
+    end
+  end
+
+  def translate_single_abbrev_jira(jira, slack_connection, user, channel)
+    issue_api = Jira::Issue.new(
+      username: $slackbotfrd_conf["jira_username"],
+      password: $slackbotfrd_conf["jira_password"]
+    )
+    log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
+
+    build_single_line_jira_str(jira, issue_api.get(jira[:id]))
+  end
+
+  def translate_multiple_abbrev_jiras(extracted_jiras, slack_connection, user, channel)
+    jiras = extracted_jiras.map do |jira|
+      log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
+
+      jira_link(jira)
+    end
+
+    ":jira: :  #{jiras.join('  |  ')}"
   end
 
   def log_info(message)
@@ -52,7 +172,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def extract_jiras(str)
-    str.scan(/(CNVS|TD|MBL|OPS|SD|RD|ITSD|CYOE)-(\d+)/i).map do |prefix, num|
+    str.scan(/(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE)-(\d+)/i).map do |prefix, num|
       { id: "#{prefix.upcase}-#{num}", prefix: prefix.upcase, number: num }
     end.uniq
   end
@@ -63,8 +183,8 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def contains_jiras(str)
-    # CNVS-12345 || TD-12345 || MBL-432 || OPS || SD || RD || ITSD || CYOE
-    str.downcase =~ /(^|\s)\(?(CNVS|TD|MBL|OPS|SD|RD|ITSD|CYOE)-\d{1,9}\)?[.!?,;]*($|\s)/i
+    # CNVS-12345 || TD-12345 || MBL-432 || OPS || SD || RD || ITSD || SE || DS || BR || CYOE
+    str.downcase =~ /(^|\s)\(?(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE)-\d{1,9}\)?[.!?,;]*($|\s)/i
   end
 
   def gerrit_url(gerr_num)
@@ -83,7 +203,84 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     jira_nums.map{ |cn| jira_url(cn) }
   end
 
-  def build_jira_str(jira, issue)
+  def build_single_line_gerrit_str(gerrit, change)
+    owner = change['owner']['name']
+    subject = change['subject']
+    verified = jenkins_vote(change)
+    code_review = code_review_vote(change)
+    qa = qa_vote(change)
+    product = product_vote(change)
+    verified = verified.empty? ? '' : "( :jenkins: #{verified} )"
+    code_review = code_review.empty? ? '' : "(CR: #{code_review} )"
+    qa = qa.empty? ? '' : "(QA: #{qa} )"
+    product = product.empty? ? '' : "(P: #{product} )"
+    votes = [verified, code_review, qa, product]
+    breaker = votes.all?(&:empty?) ? '' : " : "
+
+    ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
+  end
+
+  def build_full_gerrit_str(gerrit, change)
+    # You can get the verification, code review, etc.
+    "#{gerrit_string_header(gerrit, change)}\n" \
+    "          *Subject:*  #{change['subject']}\n" \
+    "          *Verified*:  #{jenkins_vote(change, true)}\n" \
+    "          *Code Review*:  #{code_review_vote(change, true)}\n" \
+    "          *QA*:  #{qa_vote(change, true)}\n" \
+    "          *Product*:  #{product_vote(change, true)}"
+  end
+
+  def gerrit_string_header(gerrit, change)
+    ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - *#{change['owner']['name']}*"
+  end
+
+  def vote(category, change, minus1: ':-1:', minus2: ':x:', plus1: ':+1:', plus2: ':plus2:', include_name: false)
+    name = ->(vote) do
+      if include_name
+        " - #{vote['name']}"
+      else
+        ''
+      end
+    end
+    votes = change['labels'][category]['all'].select do |vote|
+      [-2, -1, 1, 2].include?(vote['value'])
+    end
+    votes.each do |vote|
+      return "#{minus2}#{name.call(vote)}" if vote['value'] == -2
+    end
+    votes.each do |vote|
+      return "#{minus1}#{name.call(vote)}#{include_name && vote['name'] == 'Jenkins' ? ':jerkins:' : ''}" if vote['value'] == -1
+    end
+    votes.each do |vote|
+      return "#{plus2}#{name.call(vote)}" if vote['value'] == 2
+    end
+    votes.each do |vote|
+      return "#{plus1}#{name.call(vote)}#{include_name && vote['name'] == 'Jenkins' ? ':jenkins:' : ''}" if vote['value'] == 1
+    end
+    ""
+  end
+
+  def jenkins_vote(change, include_name = false)
+    vote('Verified', change, minus1: ':x:', plus1: ':check:', include_name: include_name)
+  end
+
+  def code_review_vote(change, include_name = false)
+    vote('Code-Review', change, include_name: include_name)
+  end
+
+  def qa_vote(change, include_name = false)
+    vote('QA-Review', change, minus1: ':fail:', include_name: include_name)
+  end
+
+  def product_vote(change, include_name = false)
+    vote('Product-Review', change, include_name: include_name)
+  end
+
+  def build_single_line_jira_str(jira, issue)
+    ":jira: :  #{priority_str(issue)}  #{story_points_str(issue)} #{jira_link(jira)} - #{summary_str(issue)}"
+  end
+
+  def build_full_jira_str(jira, issue)
     comp_str = ->() do
       title = '          *Component(s)*:  '
       component_str(issue).empty? ? "" : "#{title}#{component_str(issue)}\n"
@@ -175,5 +372,85 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
   def jira_link_text(jira)
     "#{jira[:prefix]}-#{jira[:number]}"
+  end
+
+  private
+
+  def command_regex
+    /^\@?angel(bot)?:?\s+set\s+(\w+)\s+(\w+)/i
+  end
+
+  def read_settings_command_regex
+    /^\@?angel(bot)?:?\s+settings/i
+  end
+
+  def contains_command(message)
+    contains_read_settings_command(message) ||
+      contains_set_settings_command(message)
+  end
+
+  def contains_read_settings_command(message)
+    message =~ read_settings_command_regex
+  end
+
+  def contains_set_settings_command(message)
+    message =~ command_regex
+  end
+
+  def command_key_val(message)
+    message.match(command_regex).captures
+  end
+
+  def command_key(message)
+    command_key_val(message)[0]
+  end
+
+  def command_val(message)
+    command_key_val(message)[1]
+  end
+
+  def pick_bot
+    num = SecureRandom.random_number(80)
+
+    return :devil   if num == 1
+    return :weeping if [2, 3].include?(num)
+    :angel
+  end
+
+  def send_msg(sc:, channel:, message:, parse: 'full')
+    return if message.empty?
+
+    bot = pick_bot
+    if channel == 'it'
+      sc.send_message(
+        channel: channel,
+        message: message,
+        parse: parse,
+        username: 'Roy',
+        avatar_emoji: ':roy:'
+      )
+    elsif bot == :devil
+      sc.send_message(
+        channel: channel,
+        message: message,
+        parse: parse,
+        username: 'Devil Bot',
+        avatar_emoji: ':devil:'
+      )
+    elsif bot == :weeping
+      sc.send_message(
+        channel: channel,
+        message: message,
+        parse: parse,
+        username: 'Weeping Angel Bot',
+        avatar_emoji: ':weeping-angel:'
+      )
+    else
+      sc.send_message(
+        channel: channel,
+        message: message,
+        parse: parse
+      )
+    end
   end
 end
