@@ -39,7 +39,9 @@ class Moss < SlackbotFrd::Bot
   end
 
   def contains_any_trigger(message)
-    ALL_TRIGGER_WORDS.any? { |word| message.downcase.include?(word) }
+    # ALL_TRIGGER_WORDS.any? { |word| message.downcase.include?(word) }
+    # turn off for now
+    false
   end
 
   def contains_trigger(words, message)

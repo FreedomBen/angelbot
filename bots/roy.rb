@@ -3,8 +3,8 @@ require 'fuzzy_match'
 
 class Roy < SlackbotFrd::Bot
   TIME_FILE = '/tmp/it-roybot-time-file.txt'
-  OPEN_EXAMPLE = 'roy: ticket for <summary of the problem>'
-  TICKET_REGEX = /^roy:\s+ticket\s+for\s+(.*)/i
+  OPEN_EXAMPLE = 'roy: ticket to <summary of the problem>'
+  TICKET_REGEX = /^roy:\s+ticket\s+(to|for)\s+(.*)/i
 
   def desired_channel?(channel)
     %w[it bps_test_graveyard].include?(channel)
@@ -22,11 +22,11 @@ class Roy < SlackbotFrd::Bot
             avatar_emoji: ':roy:',
             parse: contains_ticket?(message) ? 'none' : 'full'
           )
-          slack_connection.post_reaction(
-            name: 'roy',
-            channel: channel,
-            timestamp: timestamp
-          )
+          #slack_connection.post_reaction(
+          #  name: 'roy',
+          #  channel: channel,
+          #  timestamp: timestamp
+          #)
         end
       end
     end
@@ -37,7 +37,7 @@ class Roy < SlackbotFrd::Bot
   end
 
   def ticket_summary(message)
-    message.match(TICKET_REGEX).captures.first
+    message.match(TICKET_REGEX).captures[1]
   end
 
   def response(user:, message:)
@@ -47,9 +47,8 @@ class Roy < SlackbotFrd::Bot
       SlackbotFrd::Log.info("User '#{user}' is opening an IT ticket through Roy. message: '#{message}'")
       return process_ticket(user: user, message: message)
     elsif m.include?('roy') || m.include?('<!channel') || m.include?('<!group') || m.include?('<!here')
-      return "Hello, IT, have you tried turning it off and on again?" #\n\n" \
-             #"If you need me to open a ticket for you, type something like: \n" \
-             #"```#{OPEN_EXAMPLE}```"
+      # return "Hello, IT, have you tried turning it off and on again?"
+      return "Need to open a ticket?  You can open a ticket at http://servicedesk.instructure.com or through me by typing:\n```#{OPEN_EXAMPLE}```"
     elsif m =~ /ticket/ && ((m =~ /file/) || (m =~ /is/ && m =~ /there/) || (m =~ /submit/) || (m =~ /open/))# && time_expired?
       #capture_time
       # submit ticket
@@ -80,12 +79,13 @@ class Roy < SlackbotFrd::Bot
     SlackbotFrd::Log.debug("Jira issue creation under issue type '#{issue_type}' return val: '#{issue}'")
     if issue.key?('key')
       return "Excellent!  I opened up <#{jira_link_url(issue['key'])}|#{issue['key']}> " \
-      "for you under Issue Type '#{issue_type}'.  Please add any relevant details I may have missed."
+      "for you under Issue Type '#{issue_type}'."
     else
       SlackbotFrd::Log.warn("Problem creating issue under issue type '#{issue_type}' in jira: '#{issue}'")
       return ":doh: something went wrong :nope: opening issue type '#{issue_type}'.  I guess you have " \
              "to do it manually.  Go to http://servicedesk.instructure.com " \
-             "and click the 'IT Support' button."
+             "and click the 'IT Support' button.\n\nTechnical information:\n\n" \
+             "```#{issue}```"
     end
   end
 
