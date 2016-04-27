@@ -74,7 +74,12 @@ Definition for: *#{@word}*
 
   private
   def clean_defstr(defstr)
-    defstr.gsub(/^:/, '').gsub(/\<\/?.*\>/i, '')
+    # test case that returned a hash was 'define soon'
+    if defstr.is_a?(String)
+      defstr.gsub(/^:/, '').gsub(/\<\/?.*\>/i, '')
+    else
+      ''
+    end
   end
 end
 

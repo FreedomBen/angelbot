@@ -32,7 +32,6 @@ class BluejeansBot < SlackbotFrd::Bot
 
   def assembled_message(room_name:, room_id:, link:)
     "*#{room_name}*: :bluejeans: #{bj_url(link)}\n" \
-    "     Phone: #{BJ_PHONE.first}\n" \
     "     Meeting ID: #{room_id}"
   end
 
