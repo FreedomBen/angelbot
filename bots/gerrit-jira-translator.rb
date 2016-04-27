@@ -172,7 +172,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def extract_jiras(str)
-    str.scan(/(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE)-(\d+)/i).map do |prefix, num|
+    str.scan(/(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE|NTRS|PANDA)-(\d+)/i).map do |prefix, num|
       { id: "#{prefix.upcase}-#{num}", prefix: prefix.upcase, number: num }
     end.uniq
   end
@@ -183,8 +183,8 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def contains_jiras(str)
-    # CNVS-12345 || TD-12345 || MBL-432 || OPS || SD || RD || ITSD || SE || DS || BR || CYOE
-    str.downcase =~ /(^|\s)\(?(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE)-\d{1,9}\)?[.!?,;]*($|\s)/i
+    # CNVS-12345 || TD-12345 || MBL-432 || OPS || SD || RD || ITSD || SE || DS || BR || CYOE || NTRS || PANDA
+    str.downcase =~ /(^|\s)\(?(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE|NTRS|PANDA)-\d{1,9}\)?[.!?,;]*($|\s)/i
   end
 
   def gerrit_url(gerr_num)
@@ -242,6 +242,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
         ''
       end
     end
+    return "" unless change['labels'][category]['all']
     votes = change['labels'][category]['all'].select do |vote|
       [-2, -1, 1, 2].include?(vote['value'])
     end
@@ -249,10 +250,10 @@ class GerritJiraTranslator < SlackbotFrd::Bot
       return "#{minus2}#{name.call(vote)}" if vote['value'] == -2
     end
     votes.each do |vote|
-      return "#{minus1}#{name.call(vote)}#{include_name && vote['name'] == 'Jenkins' ? ':jerkins:' : ''}" if vote['value'] == -1
+      return "#{plus2}#{name.call(vote)}" if vote['value'] == 2
     end
     votes.each do |vote|
-      return "#{plus2}#{name.call(vote)}" if vote['value'] == 2
+      return "#{minus1}#{name.call(vote)}#{include_name && vote['name'] == 'Jenkins' ? ':jerkins:' : ''}" if vote['value'] == -1
     end
     votes.each do |vote|
       return "#{plus1}#{name.call(vote)}#{include_name && vote['name'] == 'Jenkins' ? ':jenkins:' : ''}" if vote['value'] == 1
@@ -410,7 +411,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def pick_bot
-    num = SecureRandom.random_number(80)
+    num = SecureRandom.random_number(160)
 
     return :devil   if num == 1
     return :weeping if [2, 3].include?(num)
