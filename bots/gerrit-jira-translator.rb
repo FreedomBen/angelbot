@@ -184,7 +184,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
   def contains_jiras(str)
     # CNVS-12345 || TD-12345 || MBL-432 || OPS || SD || RD || ITSD || SE || DS || BR || CYOE || NTRS || PANDA
-    str.downcase =~ /(^|\s)\(?(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE|NTRS|PANDA)-\d{1,9}\)?[.!?,;]*($|\s)/i
+    str.downcase =~ /(^|\s)\(?(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE|NTRS|PANDA)-\d{1,9}\)?[.!?,;)]*($|\s)/i
   end
 
   def gerrit_url(gerr_num)
