@@ -179,7 +179,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
   def contains_gerrits(str)
     # g/12345
-    str.downcase =~ /(^|\s)g\/\d{3,9}[.!?,;]*($|\s)/i
+    str.downcase =~ /(^|\s)g\/\d{3,9}[.!?,;)]*($|\s)/i
   end
 
   def contains_jiras(str)
