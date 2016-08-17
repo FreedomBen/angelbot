@@ -7,8 +7,7 @@ class Roy < SlackbotFrd::Bot
   TICKET_REGEX = /^roy:?\s+(?:open)?\s*ticket\s+(?:to|for)\s+(.*)/i
 
   def desired_channel?(channel)
-    #%w[it bps_test_graveyard bps_test_graveyard2].include?(channel)
-    %w[bps_test_graveyard bps_test_graveyard2].include?(channel)
+    %w[it bps_test_graveyard bps_test_graveyard2].include?(channel)
   end
 
   def add_callbacks(slack_connection)
@@ -86,7 +85,7 @@ class Roy < SlackbotFrd::Bot
       project: 'ITSD',
       issue_type: issue_type,
       summary: summary,
-      description: "Request opened by slack user '#{user}' through Roy"
+      description: "Request opened by slack user '#{user}' through Roy.  This user's jira username is '#{reporting_user}' and their email address is '#{user_info.email}'"
     )
     SlackbotFrd::Log.debug("Jira issue creation under issue type '#{issue_type}' return val: '#{issue}'")
     if issue.key?('key')
