@@ -2,6 +2,7 @@ require 'httparty'
 require 'json'
 
 require_relative 'base'
+require_relative 'user'
 
 module Jira
   class Issue
@@ -32,6 +33,9 @@ module Jira
       }).body)
     end
 
+    def set_reporter(issue_id, reporter)
+    end
+
     private
 
     def basic_auth
@@ -41,8 +45,8 @@ module Jira
       }
     end
 
-    def creation_hash(project:, issue_type:, summary:, description:)
-      {
+    def creation_hash(project:, issue_type:, summary:, description:, reporter_name: nil)
+      retval = {
         fields: {
           project: {
             key: project
@@ -54,6 +58,11 @@ module Jira
           }
         }
       }
+      if reporter_name
+        retval[:fields][:reporter] = {}
+        retval[:fields][:reporter][:name] = reporter_name
+      end
+      retval
     end
   end
 end

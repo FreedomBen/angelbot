@@ -88,7 +88,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     )
     log_info("Translated g/#{extracted_gerrit} for user '#{user}' in channel '#{channel}'")
 
-    msg = build_single_line_gerrit_str(extracted_gerrit, change_api.get(extracted_gerrit))
+    msg = build_single_line_gerrit_str(extracted_gerrit, change_api)
     #msg = build_full_gerrit_str(extracted_gerrit, change_api.get(extracted_gerrit))
     send_msg(sc: sc, channel: channel, message: msg, parse: 'none')
   end
@@ -196,28 +196,37 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def jira_url(prefix, jira_num)
-    "https://instructure.atlassian.net/browse/#{prefix.upcase}-#{jira_num}/"
+    "https://instructure.atlassian.net/browse/#{prefix.upcase}-#{jira_num}"
   end
 
   def jira_urls(jira_nums)
     jira_nums.map{ |cn| jira_url(cn) }
   end
 
-  def build_single_line_gerrit_str(gerrit, change)
-    owner = change['owner']['name']
-    subject = change['subject']
-    verified = jenkins_vote(change)
-    code_review = code_review_vote(change)
-    qa = qa_vote(change)
-    product = product_vote(change)
-    verified = verified.empty? ? '' : "( :jenkins: #{verified} )"
-    code_review = code_review.empty? ? '' : "(CR: #{code_review} )"
-    qa = qa.empty? ? '' : "(QA: #{qa} )"
-    product = product.empty? ? '' : "(P: #{product} )"
-    votes = [verified, code_review, qa, product]
-    breaker = votes.all?(&:empty?) ? '' : " : "
+  def build_single_line_gerrit_str(gerrit, change_api)
+    begin
+      change = change_api.get(gerrit)
+      owner = change['owner']['name']
+      subject = change['subject']
+      verified = jenkins_vote(change)
+      code_review = code_review_vote(change)
+      qa = qa_vote(change)
+      product = product_vote(change)
+      verified = verified.empty? ? '' : "( :jenkins: #{verified} )"
+      code_review = code_review.empty? ? '' : "(CR: #{code_review} )"
+      qa = qa.empty? ? '' : "(QA: #{qa} )"
+      product = product.empty? ? '' : "(P: #{product} )"
+      votes = [verified, code_review, qa, product]
+      breaker = votes.all?(&:empty?) ? '' : " : "
 
-    ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
+      return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
+    rescue StandardError => e
+      SlackbotFrd::Log.warn(
+        "Error encountered parsing gerrit #{gerrit}'.  " \
+        "Message: #{e.message}.\n#{e}"
+      )
+      return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - _error reading status from gerrit_"
+    end
   end
 
   def build_full_gerrit_str(gerrit, change)
@@ -258,6 +267,11 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     votes.each do |vote|
       return "#{plus1}#{name.call(vote)}#{include_name && vote['name'] == 'Jenkins' ? ':jenkins:' : ''}" if vote['value'] == 1
     end
+    ""
+  rescue NoMethodError => e
+    # If something we need is missing from the hash,
+    # catch the no method error from dereferencing a
+    # nil pointer and just return empty string
     ""
   end
 

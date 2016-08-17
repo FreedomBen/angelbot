@@ -1,11 +1,9 @@
 require 'aws-sdk'
-require 'byebug'
 
 class DynamoDB
   def initialize(botname:)
     @botname = botname
     @client = Aws::DynamoDB::Client.new(
-      #endpoint: $slackbotfrd_conf['dynamo_host'],
       region: $slackbotfrd_conf['dynamo_region'],
       credentials: Aws::Credentials.new(
         access_key_id,
@@ -93,9 +91,9 @@ class DynamoDB
   end
 
   def retrieve_credential(specific, generic)
-    retval = ENV[specific].chomp
-    retval = $slackbotfrd_conf[specific.downcase].chomp if retval.empty?
-    retval = ENV[generic].chomp if retval.empty?
-    retval
+    retval = $slackbotfrd_conf[specific]
+    retval = $slackbotfrd_conf[specific.downcase] if retval.nil? || retval.empty?
+    retval = $slackbotfrd_conf[generic] if retval.nil? || retval.empty?
+    retval.chomp
   end
 end
