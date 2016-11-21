@@ -14,7 +14,8 @@ class AndyBot < SlackbotFrd::Bot
   end
 
   def contains_trigger(message)
-    TRIGGER_WORDS.any? { |word| message.downcase.include?(word) }
+    false
+    # TRIGGER_WORDS.any? { |word| message.downcase.include?(word) }
   end
 
   def response

@@ -125,7 +125,12 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     jiras = extract_jiras(message).map do |jira|
       log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
 
-      build_full_jira_str(jira, issue_api.get(jira[:id]))
+      issue_api_get = issue_api.get(jira[:id])
+      if issue_api_get[:error]
+        "#{jira[:id]} - #{issue_api_get[:error]}"
+      else
+        build_full_jira_str(jira, issue_api_get)
+      end
     end
 
     jiras.join("\n")
@@ -179,7 +184,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
   def contains_gerrits(str)
     # g/12345
-    str.downcase =~ /(^|\s)g\/\d{3,9}[.!?,;)]*($|\s)/i
+    str.downcase =~ /(^|\s|\()g\/\d{3,9}[.!?,;)\/]*($|\s)/i
   end
 
   def contains_jiras(str)
