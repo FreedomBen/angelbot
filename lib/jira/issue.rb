@@ -15,7 +15,13 @@ module Jira
     end
 
     def get(id)
-      JSON.parse(self.class.get("/#{id}", basic_auth: basic_auth).body)
+      begin
+        JSON.parse(self.class.get("/#{id}", basic_auth: basic_auth, timeout: 5).body)
+      rescue JSON::ParserError => e
+        { error: 'Jira returned invalid JSON (probably an error page in HTML :facepalm: )' }
+      rescue StandardError => e
+        { error: 'Unknown error occurred when querying Jira' }
+      end
     end
 
     def create(project:, issue_type:, summary:, description:)
@@ -29,7 +35,8 @@ module Jira
         basic_auth: basic_auth,
         headers: {
           'Content-Type' => 'application/json'
-        }
+        },
+        timeout: 5
       }).body)
     end
 
