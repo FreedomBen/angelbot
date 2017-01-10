@@ -26,11 +26,6 @@ class Roy < SlackbotFrd::Bot
             avatar_emoji: ':roy:',
             parse: contains_ticket?(message) ? 'none' : 'full'
           )
-          #slack_connection.post_reaction(
-          #  name: 'roy',
-          #  channel: channel,
-          #  timestamp: timestamp
-          #)
         end
       end
     end
@@ -53,12 +48,13 @@ class Roy < SlackbotFrd::Bot
     elsif (m.include?('roy') || m.include?('<!channel') || m.include?('<!group') || m.include?('<!here')) && !contains_jiras(message)
       # return "Hello, IT, have you tried turning it off and on again?"
       return "Need to open a ticket?  You can open a ticket at http://servicedesk.instructure.com or through me by typing:\n```#{OPEN_EXAMPLE}```"
-    elsif m =~ /ticket/ && ((m =~ /file/) || (m =~ /is/ && m =~ /there/) || (m =~ /submit/) || (m =~ /open/))# && time_expired?
+    elsif m =~ /ticket/ && ((m =~ /file/) || (m =~ /is/ && m =~ /there/) || (m =~ /submit/) || (m =~ /open/) || (m =~ /send/))# && time_expired?
       #capture_time
       # submit ticket
       # open ticket
       # file ticket
       # is there ticket
+      # send ticket
       #return "No ticket?\n\nhttp://i.imgur.com/avwx7Zj.gif\nhttp://media.giphy.com/media/CHROEms0iVuda/giphy.gif\n\nYou can open a ticket through me by typing something like:\n```#{OPEN_EXAMPLE}```"
       return "Need to open a ticket?  You can open a ticket at http://servicedesk.instructure.com or through me by typing:\n```#{OPEN_EXAMPLE}```"
     end
