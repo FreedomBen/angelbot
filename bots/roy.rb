@@ -15,7 +15,7 @@ class Roy < SlackbotFrd::Bot
   end
 
   def add_callbacks(slack_connection)
-    slack_connection.on_message do |user:, channel:, message:, timestamp:|
+    slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if message && desired_channel?(channel) && user != :bot
         resp = response(sc: slack_connection, user: user, message: message)
         if resp
@@ -24,7 +24,8 @@ class Roy < SlackbotFrd::Bot
             message: resp,
             username: 'Roy',
             avatar_emoji: ':roy:',
-            parse: contains_ticket?(message) ? 'none' : 'full'
+            parse: contains_ticket?(message) ? 'none' : 'full',
+            thread_ts: thread_ts
           )
         end
       end
@@ -45,6 +46,8 @@ class Roy < SlackbotFrd::Bot
     if contains_ticket?(m)
       SlackbotFrd::Log.info("User '#{user}' is opening an IT ticket through Roy. message: '#{message}'")
       return process_ticket(sc: sc, user: user, message: message)
+    elsif m =~ /thanks?(\syou)?\s+roy/i || m =~ /roy:?\sthanks?(\syou)?/i || m =~ /thx\s+roy/i
+      return "You're very welcome, #{user}!"
     elsif (m.include?('roy') || m.include?('<!channel') || m.include?('<!group') || m.include?('<!here')) && !contains_jiras(message)
       # return "Hello, IT, have you tried turning it off and on again?"
       return "Need to open a ticket?  You can open a ticket at http://servicedesk.instructure.com or through me by typing:\n```#{OPEN_EXAMPLE}```"

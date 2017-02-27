@@ -85,7 +85,7 @@ end
 
 class DictionaryBot < SlackbotFrd::Bot
   def add_callbacks(slack_connection)
-    slack_connection.on_message do |user:, channel:, message:, timestamp:|
+    slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if message && user != :bot && user != 'angel'
         # Dictionary
         if message.downcase =~ /^(define|definition\s+for):\s+(\w+)/i
@@ -94,7 +94,8 @@ class DictionaryBot < SlackbotFrd::Bot
           json = Crack::XML.parse(xml.body_str)
           slack_connection.send_message(
             channel: channel,
-            message: Definitions.new($2, json).to_s
+            message: Definitions.new($2, json).to_s,
+            thread_ts: thread_ts
           )
           begin
             SlackbotFrd::Log.info("Defined #{$2} for user '#{user}' in channel '#{channel}'")
@@ -104,7 +105,8 @@ class DictionaryBot < SlackbotFrd::Bot
         elsif message.downcase =~ /^(synonyms?|antonyms?)(\s+for)?\s+(\w+)/i
           slack_connection.send_message(
             channel: channel,
-            message: ":doh: D'oh!  Sorry this isn't implemented yet"
+            message: ":doh: D'oh!  Sorry this isn't implemented yet",
+            thread_ts: thread_ts
           )
         end
       end

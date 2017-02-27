@@ -61,14 +61,15 @@ class Moss < SlackbotFrd::Bot
   end
 
   def add_callbacks(slack_connection)
-    slack_connection.on_message do |user:, channel:, message:, timestamp:|
+    slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if interested?(user, channel, message)
         if contains_any_trigger(message)
           slack_connection.send_message(
             channel: channel,
             message: response(message),
             username: "Moss",
-            avatar_emoji: ":moss:"
+            avatar_emoji: ":moss:",
+            thread_ts: thread_ts
           )
           slack_connection.post_reaction(name: 'moss', channel: channel, timestamp: timestamp)
           if contains_trigger(EMERGENCY_TRIGGER_WORDS, message)

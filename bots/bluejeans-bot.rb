@@ -69,21 +69,23 @@ class BluejeansBot < SlackbotFrd::Bot
       slack_connection.num_users_in_channel(channel) > QUIET_CHANNEL_MIN_USERS
   end
 
-  def notify_of_dm(slack_connection, channel)
+  def notify_of_dm(slack_connection, channel, thread_ts)
     slack_connection.send_message(
       channel: channel,
-      message: "Listing all :bluejeans: links in this channel is a bit noisy.  I'll DM you :wink:"
+      message: "Listing all :bluejeans: links in this channel is a bit noisy.  I'll DM you :wink:",
+      thread_ts: thread_ts
     )
   end
 
-  def notify_of_no_match(slack_connection, channel, regex)
+  def notify_of_no_match(slack_connection, channel, regex, thread_ts)
     slack_connection.send_message(
       channel: channel,
       message: "Sorry, no conference rooms matched the regular expression '#{regex}'",
+      thread_ts: thread_ts
     )
   end
 
-  def send_info(slack_connection, channel, k, quiet)
+  def send_info(slack_connection, channel, k, quiet, thread_ts)
     room_id = BLUEJEANS[k]['number']
     link = if BLUEJEANS[k]['link'].empty?
              room_id
@@ -97,12 +99,13 @@ class BluejeansBot < SlackbotFrd::Bot
         room_id: room_id,
         link: link
       ),
-      channel_is_id: quiet
+      channel_is_id: quiet,
+      thread_ts: thread_ts
     )
   end
 
   def add_callbacks(slack_connection)
-    slack_connection.on_message do |user:, channel:, message:, timestamp:|
+    slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if message && user != :bot && user != 'angel' && bluejeans?(message)
         SlackbotFrd::Log.info(
           "Bluejeans bot: request for '#{message}' from user '#{user}' in channel '#{channel}'"
@@ -127,11 +130,11 @@ class BluejeansBot < SlackbotFrd::Bot
           BLUEJEANS.each_key do |k|
             if room_matches(k, regex)
               found = true
-              send_info(slack_connection, channel, k, quiet)
+              send_info(slack_connection, channel, k, quiet, thread_ts)
             end
           end
 
-          notify_of_no_match(slack_connection, channel, regex) unless found
+          notify_of_no_match(slack_connection, channel, regex, thread_ts) unless found
         end
       end
     end

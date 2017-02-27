@@ -27,12 +27,13 @@ class AndyBot < SlackbotFrd::Bot
   end
 
   def add_callbacks(slack_connection)
-    slack_connection.on_message do |user:, channel:, message:, timestamp:|
+    slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if interested?(user, channel, message)
         if contains_trigger(message)
           slack_connection.send_message(
             channel: channel,
-            message: response
+            message: response,
+            thread_ts: thread_ts
           )
         end
       end

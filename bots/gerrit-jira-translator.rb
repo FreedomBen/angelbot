@@ -7,19 +7,23 @@ require_relative '../lib/gerrit/change'
 require_relative '../lib/gerrit-jira-translator/data'
 
 class GerritJiraTranslator < SlackbotFrd::Bot
+  def whitelisted_prefixes
+    'CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE|NTRS|PANDA|OUT|MC|PFS'
+  end
+
   def add_callbacks(slack_connection)
-    slack_connection.on_message do |user:, channel:, message:, timestamp:|
-      if message && user != :bot && user != 'angel'
+    slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
+      if message && user != :bot && user != 'angel' && thread_ts.nil?
         if contains_command(message)
-          handle_command(slack_connection, user, channel, message)
+          handle_command(slack_connection, user, channel, message, thread_ts)
         elsif contains_gerrits(message) || contains_jiras(message)
-          handle_gerrits_jiras(slack_connection, user, channel, message)
+          handle_gerrits_jiras(slack_connection, user, channel, message, thread_ts)
         end
       end
     end
   end
 
-  def handle_command(slack_connection, user, channel, message)
+  def handle_command(slack_connection, user, channel, message, thread_ts)
     data = GerritJiraData.new(channel: channel)
     message = if contains_read_settings_command(message)
                 SlackbotFrd::Log.debug(
@@ -32,7 +36,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
                 )
                 handle_set_settings_command(data, message)
               end
-    send_msg(sc: slack_connection, channel: channel, message: message)
+    send_msg(sc: slack_connection, channel: channel, message: message, thread_ts: thread_ts)
   end
 
   def handle_set_settings_command(data, message)
@@ -58,12 +62,12 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     end
   end
 
-  def handle_gerrits_jiras(slack_connection, user, channel, message)
+  def handle_gerrits_jiras(slack_connection, user, channel, message, thread_ts)
     data = GerritJiraData.new(channel: channel)
     if data.show?
       SlackbotFrd::Log.debug("channel '#{channel}' has gerrit/jiras turned on")
-      translate_gerrits(slack_connection, user, channel, message) if contains_gerrits(message)
-      translate_jiras(slack_connection, user, channel, message, data)   if contains_jiras(message)
+      translate_gerrits(slack_connection, user, channel, message, thread_ts) if contains_gerrits(message)
+      translate_jiras(slack_connection, user, channel, message, data, thread_ts)   if contains_jiras(message)
     else
       SlackbotFrd::Log.debug(
         "Ignoring gerrit/jiras in channel '#{channel}' because " \
@@ -72,16 +76,16 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     end
   end
 
-  def translate_gerrits(slack_connection, user, channel, message)
+  def translate_gerrits(slack_connection, user, channel, message, thread_ts)
     extracted_gerrits = extract_gerrits(message)
     if extracted_gerrits.count == 1
-      translate_single_gerrits(extracted_gerrits.first, slack_connection, user, channel, message)
+      translate_single_gerrits(extracted_gerrits.first, slack_connection, user, channel, message, thread_ts)
     else
-      translate_multiple_gerrits(extracted_gerrits, slack_connection, user, channel, message)
+      translate_multiple_gerrits(extracted_gerrits, slack_connection, user, channel, message, thread_ts)
     end
   end
 
-  def translate_single_gerrits(extracted_gerrit, sc, user, channel, message)
+  def translate_single_gerrits(extracted_gerrit, sc, user, channel, message, thread_ts)
     change_api = Gerrit::Change.new(
       username: $slackbotfrd_conf["gerrit_username"],
       password: $slackbotfrd_conf["gerrit_password"]
@@ -90,10 +94,10 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
     msg = build_single_line_gerrit_str(extracted_gerrit, change_api)
     #msg = build_full_gerrit_str(extracted_gerrit, change_api.get(extracted_gerrit))
-    send_msg(sc: sc, channel: channel, message: msg, parse: 'none')
+    send_msg(sc: sc, channel: channel, message: msg, parse: 'none', thread_ts: thread_ts)
   end
 
-  def translate_multiple_gerrits(extracted_gerrits, sc, user, channel, message)
+  def translate_multiple_gerrits(extracted_gerrits, sc, user, channel, message, thread_ts)
     gerrits = extracted_gerrits.map do |gn|
       log_info("Translated g/#{gn} for user '#{user}' in channel '#{channel}'")
 
@@ -102,10 +106,10 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
     message = ":gerrit: :  #{gerrits.join('  |  ')}"
 
-    send_msg(sc: sc, channel: channel, message: message, parse: 'none')
+    send_msg(sc: sc, channel: channel, message: message, parse: 'none', thread_ts: thread_ts)
   end
 
-  def translate_jiras(slack_connection, user, channel, message, data)
+  def translate_jiras(slack_connection, user, channel, message, data, thread_ts)
     message = if data.channel_full?
                 translate_full_jiras(slack_connection, user, channel, message)
               elsif data.channel_abbrev?
@@ -114,7 +118,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
                 ''
               end
 
-    send_msg(sc: slack_connection, channel: channel, message: message, parse: 'none')
+    send_msg(sc: slack_connection, channel: channel, message: message, parse: 'none', thread_ts: thread_ts)
   end
 
   def translate_full_jiras(slack_connection, user, channel, message)
@@ -177,7 +181,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def extract_jiras(str)
-    str.scan(/(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE|NTRS|PANDA|OUT|MC)-(\d+)/i).map do |prefix, num|
+    str.scan(/(#{whitelisted_prefixes})-(\d+)/i).map do |prefix, num|
       { id: "#{prefix.upcase}-#{num}", prefix: prefix.upcase, number: num }
     end.uniq
   end
@@ -188,8 +192,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def contains_jiras(str)
-    # CNVS-12345 || TD-12345 || MBL-432 || OPS || SD || RD || ITSD || SE || DS || BR || CYOE || NTRS || PANDA || OUT || MC
-    str.downcase =~ /(^|\s)\(?(CNVS|TD|MBL|OPS|SD|RD|ITSD|SE|DS|BR|CYOE|NTRS|PANDA|OUT|MC)-\d{1,9}\)?[.!?,;)]*($|\s)/i
+    str.downcase =~ /(^|\s)\(?(#{whitelisted_prefixes})-\d{1,9}\)?[.!?,;)]*($|\s)/i
   end
 
   def gerrit_url(gerr_num)
@@ -441,7 +444,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     :angel
   end
 
-  def send_msg(sc:, channel:, message:, parse: 'full')
+  def send_msg(sc:, channel:, message:, parse: 'full', thread_ts: nil)
     return if message.empty?
 
     bot = pick_bot
@@ -451,7 +454,8 @@ class GerritJiraTranslator < SlackbotFrd::Bot
         message: message,
         parse: parse,
         username: 'Roy',
-        avatar_emoji: ':roy:'
+        avatar_emoji: ':roy:',
+        thread_ts: thread_ts
       )
     elsif bot == :devil
       sc.send_message(
@@ -459,7 +463,8 @@ class GerritJiraTranslator < SlackbotFrd::Bot
         message: message,
         parse: parse,
         username: 'Devil Bot',
-        avatar_emoji: ':devil:'
+        avatar_emoji: ':devil:',
+        thread_ts: thread_ts
       )
     elsif bot == :weeping
       sc.send_message(
@@ -467,13 +472,15 @@ class GerritJiraTranslator < SlackbotFrd::Bot
         message: message,
         parse: parse,
         username: 'Weeping Angel Bot',
-        avatar_emoji: ':weeping-angel:'
+        avatar_emoji: ':weeping-angel:',
+        thread_ts: thread_ts
       )
     else
       sc.send_message(
         channel: channel,
         message: message,
-        parse: parse
+        parse: parse,
+        thread_ts: thread_ts
       )
     end
   end
