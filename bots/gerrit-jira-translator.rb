@@ -235,9 +235,9 @@ class GerritJiraTranslator < SlackbotFrd::Bot
       qa = qa.empty? ? '' : "(QA: #{qa} )"
       product = product.empty? ? '' : "(P: #{product} )"
       votes = [verified, code_review, qa, product]
-      breaker = votes.all?(&:empty?) ? '' : " : "
+      breaker = votes.all?(&:empty?) ? '' : " - "
 
-      return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> : <#{gerrit_mobile_url(gerrit)}|:iphone:> - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
+      return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> (<#{gerrit_mobile_url(gerrit)}|mobile>) - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
     rescue StandardError => e
       SlackbotFrd::Log.warn(
         "Error encountered parsing gerrit #{gerrit}'.  " \
@@ -261,7 +261,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> : <#{gerrit_mobile_url(gerrit)}|:iphone:> - *#{change['owner']['name']}*"
   end
 
-  def vote(category, change, minus1: ':-1:', minus2: ':x:', plus1: ':+1:', plus2: ':plus2:', include_name: false)
+  def vote(category, change, minus1: ':-1:', minus2: ':x:', plus1: ':thumbsup_all:', plus2: ':plus2:', include_name: false)
     name = ->(vote) do
       if include_name
         " - #{vote['name']}"
