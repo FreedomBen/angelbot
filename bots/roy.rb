@@ -90,7 +90,10 @@ class Roy < SlackbotFrd::Bot
         project: 'ITSD',
         issue_type: issue_type,
         summary: summary,
-        description: description
+        description: description,
+        # can't do reporter_name for now, likely due to permissions missing:
+        # https://answers.atlassian.com/questions/265902/create-issue-getting-error-on-reporter-field-reporter-cannot-be-set
+        # reporter_name: reporting_user
       )
       SlackbotFrd::Log.debug("Jira issue creation under issue type '#{issue_type}' return val: '#{issue}'")
       if issue.key?('key')
