@@ -160,13 +160,19 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def translate_multiple_abbrev_jiras(extracted_jiras, slack_connection, user, channel)
+    issue_api = Jira::Issue.new(
+      username: $slackbotfrd_conf["jira_username"],
+      password: $slackbotfrd_conf["jira_password"]
+    )
     jiras = extracted_jiras.map do |jira|
       log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
 
-      jira_link(jira)
+      #jira_link(jira)
+      build_single_line_jira_str(jira, issue_api.get(jira[:id]))
     end
 
-    ":jira: :  #{jiras.join('  |  ')}"
+    #":jira: :  #{jiras.join('  |  ')}"
+    jiras.join("\n")
   end
 
   def log_info(message)
