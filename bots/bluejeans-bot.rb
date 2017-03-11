@@ -123,7 +123,7 @@ class BluejeansBot < SlackbotFrd::Bot
 
           if (regex =~ /all/i || regex == '.*') && quiet_channel?(slack_connection, channel)
             quiet = true
-            notify_of_dm(slack_connection, channel)
+            notify_of_dm(slack_connection, channel, thread_ts)
             channel = slack_connection.im_channel_for_user(user: user)
           end
 
