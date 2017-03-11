@@ -98,15 +98,15 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def translate_multiple_gerrits(extracted_gerrits, sc, user, channel, message, thread_ts)
+    change_api = Gerrit::Change.new(
+      username: $slackbotfrd_conf["gerrit_username"],
+      password: $slackbotfrd_conf["gerrit_password"]
+    )
     gerrits = extracted_gerrits.map do |gn|
       log_info("Translated g/#{gn} for user '#{user}' in channel '#{channel}'")
-
-      "<#{gerrit_url(gn)}|g/#{gn}>"
+      build_single_line_gerrit_str(gn, change_api)
     end
-
-    message = ":gerrit: :  #{gerrits.join('  |  ')}"
-
-    send_msg(sc: sc, channel: channel, message: message, parse: 'none', thread_ts: thread_ts)
+    send_msg(sc: sc, channel: channel, message: gerrits.join("\n"), parse: 'none', thread_ts: thread_ts)
   end
 
   def translate_jiras(slack_connection, user, channel, message, data, thread_ts)
