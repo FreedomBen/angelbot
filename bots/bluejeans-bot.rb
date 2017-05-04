@@ -31,7 +31,9 @@ class BluejeansBot < SlackbotFrd::Bot
   end
 
   def assembled_message(room_name:, room_id:, link:)
-    "*#{room_name}*: :bluejeans: #{bj_url(link)}\n" \
+    '_Note: this link will no longer work unless the room ' \
+    "explicitly joins this meeting._\n\n" \
+    "*#{room_name}*: :bluejeans: #{bj_url(room_id)}\n" \
     "     Meeting ID: #{room_id}"
   end
 
@@ -113,10 +115,6 @@ class BluejeansBot < SlackbotFrd::Bot
 
         # ignore messages with more than 4 words
         unless message.split(' ').count > 3
-          SlackbotFrd::Log.info(
-            "Bluejeans bot skipping message due to 4 or more words (count is #{message.split(' ').count})"
-          )
-
           regex = regex_in(message)
           found = false
           quiet = false
@@ -135,6 +133,10 @@ class BluejeansBot < SlackbotFrd::Bot
           end
 
           notify_of_no_match(slack_connection, channel, regex, thread_ts) unless found
+        else
+          SlackbotFrd::Log.info(
+            "Bluejeans bot skipping message due to 4 or more words (count is #{message.split(' ').count})"
+          )
         end
       end
     end
