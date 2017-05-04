@@ -16,7 +16,7 @@ class Roy < SlackbotFrd::Bot
 
   def add_callbacks(slack_connection)
     slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
-      if message && desired_channel?(channel) && user != :bot
+      if message && desired_channel?(channel) && user != :bot && timestamp != thread_ts
         resp = response(sc: slack_connection, user: user, message: message)
         if resp
           slack_connection.send_message(
