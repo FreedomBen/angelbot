@@ -224,6 +224,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   def build_single_line_gerrit_str(gerrit, change_api)
     begin
       change = change_api.get(gerrit)
+      project = change['project']
       owner = change['owner']['name']
       subject = change['subject']
       verified = jenkins_vote(change)
@@ -237,7 +238,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
       votes = [verified, code_review, qa, product]
       breaker = votes.all?(&:empty?) ? '' : " - "
 
-      return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> (<#{gerrit_mobile_url(gerrit)}|mobile>) - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
+      return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> (<#{gerrit_mobile_url(gerrit)}|gerrit-mobile>) - [#{project}] - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
     rescue StandardError => e
       SlackbotFrd::Log.warn(
         "Error encountered parsing gerrit #{gerrit}'.  " \
@@ -250,6 +251,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   def build_full_gerrit_str(gerrit, change)
     # You can get the verification, code review, etc.
     "#{gerrit_string_header(gerrit, change)} : <#{gerrit_mobile_url(gerrit)}|:iphone:>\n" \
+    "          *Project:*  #{change['project']}\n" \
     "          *Subject:*  #{change['subject']}\n" \
     "          *Verified*:  #{jenkins_vote(change, true)}\n" \
     "          *Code Review*:  #{code_review_vote(change, true)}\n" \
