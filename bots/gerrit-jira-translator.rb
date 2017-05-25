@@ -198,7 +198,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def contains_jiras(str)
-    str.downcase =~ /(^|\s)\(?(#{whitelisted_prefixes})-\d{1,9}\)?[.!?,;)]*($|\s)/i
+    str.downcase =~ /(^|\s|browse\/)\(?(#{whitelisted_prefixes})-\d{1,9}\)?>?[.!?,;)]*($|\s)/i
   end
 
   def gerrit_url(gerr_num)
