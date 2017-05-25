@@ -465,6 +465,15 @@ class GerritJiraTranslator < SlackbotFrd::Bot
         avatar_emoji: ':roy:',
         thread_ts: thread_ts
       )
+    elsif channel == 'pandata'
+      sc.send_message(
+        channel: channel,
+        message: message,
+        parse: parse,
+        username: 'Moss',
+        avatar_emoji: ':moss:',
+        thread_ts: thread_ts
+      )
     elsif bot == :devil
       sc.send_message(
         channel: channel,

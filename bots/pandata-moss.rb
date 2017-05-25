@@ -47,9 +47,6 @@ class PandataMoss < SlackbotFrd::Bot
       return process_ticket(sc: sc, user: user, message: message)
     elsif m =~ /thanks?(\syou)?\s+moss/i || m =~ /moss:?\sthanks?(\syou)?/i || m =~ /thx\s+moss/i
       return "You're very welcome, #{user}!"
-    elsif (m.include?('moss') || m.include?('<!channel') || m.include?('<!group') || m.include?('<!here')) && !contains_jiras(message)
-      # return "Hello, IT, have you tried turning it off and on again?"
-      return "Need to open a ticket?  You can open a ticket at through me by typing:\n```#{OPEN_EXAMPLE}```"
     elsif m =~ /ticket/ && ((m =~ /file/) || (m =~ /is/ && m =~ /there/) || (m =~ /submit/) || (m =~ /open/) || (m =~ /send/))
       return "Need to open a ticket?  You can open a ticket at through me by typing:\n```#{OPEN_EXAMPLE}```"
     end
