@@ -64,10 +64,10 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
   def handle_gerrits_jiras(slack_connection, user, channel, message, thread_ts)
     data = GerritJiraData.new(channel: channel)
-    if data.show?
-      SlackbotFrd::Log.debug("channel '#{channel}' has gerrit/jiras turned on")
-      translate_gerrits(slack_connection, user, channel, message, thread_ts) if contains_gerrits(message)
-      translate_jiras(slack_connection, user, channel, message, data, thread_ts)   if contains_jiras(message)
+    if contains_gerrits(message)
+      translate_gerrits(slack_connection, user, channel, message, thread_ts)
+    elsif data.show? && contains_jiras(message)
+      translate_jiras(slack_connection, user, channel, message, data, thread_ts)
     else
       SlackbotFrd::Log.debug(
         "Ignoring gerrit/jiras in channel '#{channel}' because " \
