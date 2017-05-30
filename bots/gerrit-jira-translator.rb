@@ -70,8 +70,8 @@ class GerritJiraTranslator < SlackbotFrd::Bot
       translate_jiras(slack_connection, user, channel, message, data, thread_ts)
     else
       SlackbotFrd::Log.debug(
-        "Ignoring gerrit/jiras in channel '#{channel}' because " \
-        'it has gerrit/jiras turned off'
+        "Ignoring jiras in channel '#{channel}' because " \
+        'it has jiras turned off'
       )
     end
   end
