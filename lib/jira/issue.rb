@@ -24,13 +24,14 @@ module Jira
       end
     end
 
-    def create(project:, issue_type:, summary:, description:)
+    def create(project:, issue_type:, summary:, description:, reporter_name: nil)
       JSON.parse(self.class.post('/', {
         body: creation_hash(
           project: project,
           issue_type: issue_type,
           summary: summary,
-          description: description
+          description: description,
+          reporter_name: reporter_name
         ).to_json,
         basic_auth: basic_auth,
         headers: {
