@@ -14,7 +14,7 @@ module Gerrit
     end
 
     def get(id)
-      ret = self.class.get("/#{id}/detail", digest_auth: digest_auth).body.split("\n")
+      ret = self.class.get("/#{id}/detail", basic_auth: basic_auth).body.split("\n")
       # gerrit puts some weird cruft in the way at the top
       ret.shift
       JSON.parse(ret.join("\n"))
@@ -22,7 +22,7 @@ module Gerrit
 
     private
 
-    def digest_auth
+    def basic_auth
       {
         username: @username,
         password: @password
