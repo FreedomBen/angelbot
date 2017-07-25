@@ -20,7 +20,9 @@ module Testrails
             'Content-Type' => 'application/json'
             },
             timeout: 5
-        }).body.split("\n")
+        })
+        return "Error: #{ret.code}" if (ret.code != 200)
+        ret = ret.body.split("\n")
         JSON.parse(ret.join("\n"))
     end
 

@@ -11,25 +11,24 @@ class TestrailsBot < SlackbotFrd::Bot
         if contains_command(message)
           handle_command(slack_connection, user, channel, message, thread_ts)
         elsif contains_testrails(message)
-          handle_testrails(slack_connection, user, channel, message, thread_ts)
+          handle_testrails(slack_connection, user, channel, message, thread_ts, false)
+        elsif contains_testrails_url(message)
+          handle_testrails(slack_connection, user, channel, message, thread_ts, true)
         end
       end
     end
   end
 
-  def handle_testrails(slack_connection, user, channel, message, thread_ts)
-    if contains_testrails(message)
-      translate_testrails(slack_connection, user, channel, message, thread_ts)
-    else
-      SlackbotFrd::Log.debug(
-        "Ignoring TestRails in channel '#{channel}' because " \
-        'it has TestRails turned off'
-      )
-    end
+  def handle_testrails(slack_connection, user, channel, message, thread_ts, found_url)
+    translate_testrails(slack_connection, user, channel, message, thread_ts, found_url)
   end
 
-  def translate_testrails(slack_connection, user, channel, message, thread_ts)
-    extracted_testrails = extract_testrailcases(message)
+  def translate_testrails(slack_connection, user, channel, message, thread_ts, found_url)
+    if found_url
+      extracted_testrails = extract_testrailcases_from_url(message)
+    else
+      extracted_testrails = extract_testrailcases(message)
+    end
     if extracted_testrails.count == 1
       translate_single_testrails(extracted_testrails.first, slack_connection, user, channel, message, thread_ts)
     else
@@ -79,33 +78,33 @@ class TestrailsBot < SlackbotFrd::Bot
     str.downcase =~ /(^|\s|\()c\d{5,9}[.!?,;)\/]*($|\s)/i
   end
 
-  def testrails_url(testrail_num)
-    "https://canvas.testrail.com/index.php?/cases/view/#{testrail_num}"
+  def extract_testrailcases_from_url(str)
+    str.scan(/cases\/view\/(\d{5,9})/i).map{ |a| a.first.sub('/cases\/view\/', '') }.uniq
   end
 
-  def testrails_urls(testrail_nums)
-    testrail_nums.map{ |trn| testrails_url(trn) }
+  def contains_testrails_url(str)
+    str.downcase =~ /(^|\s|\()[htps.:\/<]*canvas\.testrail\.com\/index\.php\?\/cases\/view\/\d{5,9}[.!?,;)\/>]*($|\s)/i
   end
-
 
   def build_single_line_testrail_str(testrail_id, change_api)
     begin
-      change = change_api.get_testcase(testrail_id)
-      title = change['title']
+      result = change_api.get_testcase(testrail_id)
+
+      title = result['title']
       title = title.first(30) + "..." if title.length > 30
-      priority = change['priority_id']
-      section_id = change['section_id']
+      priority = result['priority_id']
+      section_id = result['section_id']
       location = change_api.get_sections(section_id)
 
-      # to_be_automated = change['custom_to_be_automated']
-      already_automated = change['custom_automated'] ? ':yes:' : ':nope:'
+      # to_be_automated = result['custom_to_be_automated']
+      already_automated = result['custom_automated'] ? ':yes:' : ':nope:'
       return "Test :rails: :  <#{testrail_url(testrail_id)}|C#{testrail_id}> - [#{title}] - *Priority:* #{priority} - *Automated?* #{already_automated} -*Path:* #{location}"
     rescue StandardError => e
       SlackbotFrd::Log.warn(
         "Error encountered parsing testrail #{testrail_id}'.  " \
         "Message: #{e.message}.\n#{e}"
       )
-      return "Test :rails: :  <#{testrail_url(testrail_id)}|C#{testrail_id}> - _error reading status from testrails"
+      return "Test :rails: :  <#{testrail_url(testrail_id)}|C#{testrail_id}> - #{result} - I don't think that's a valid test case number"
     end
   end
 
