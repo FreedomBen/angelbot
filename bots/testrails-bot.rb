@@ -8,9 +8,7 @@ class TestrailsBot < SlackbotFrd::Bot
   def add_callbacks(slack_connection)
     slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if message && user != :bot && user != 'angel' && timestamp != thread_ts
-        if contains_command(message)
-          handle_command(slack_connection, user, channel, message, thread_ts)
-        elsif contains_testrails(message)
+        if contains_testrails(message)
           handle_testrails(slack_connection, user, channel, message, thread_ts, false)
         elsif contains_testrails_url(message)
           handle_testrails(slack_connection, user, channel, message, thread_ts, true)
@@ -109,40 +107,7 @@ class TestrailsBot < SlackbotFrd::Bot
     end
   end
 
-    private
-
-  def command_regex
-    /^\@?angel(bot)?:?\s+set\s+(\w+)\s+(\w+)/i
-  end
-
-  def read_settings_command_regex
-    /^\@?angel(bot)?:?\s+settings/i
-  end
-
-  def contains_command(message)
-    contains_read_settings_command(message) ||
-      contains_set_settings_command(message)
-  end
-
-  def contains_read_settings_command(message)
-    message =~ read_settings_command_regex
-  end
-
-  def contains_set_settings_command(message)
-    message =~ command_regex
-  end
-
-  def command_key_val(message)
-    message.match(command_regex).captures
-  end
-
-  def command_key(message)
-    command_key_val(message)[0]
-  end
-
-  def command_val(message)
-    command_key_val(message)[1]
-  end
+  private
 
   def pick_bot
     num = SecureRandom.random_number(160)
