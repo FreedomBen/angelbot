@@ -38,7 +38,7 @@ class TestrailsBot < SlackbotFrd::Bot
   def translate_single_testrails(extracted_testrail, sc, user, channel, message, thread_ts)
     change_api = Testrails::Change.new(
       username: $slackbotfrd_conf["testrail_username"],
-      password: $slackbotfrd_conf["testrail_token"]
+      password: $slackbotfrd_conf["testrail_password"]
     )
     log_info("Translated C#{extracted_testrail} for user '#{user}' in channel '#{channel}'")
 
@@ -49,7 +49,7 @@ class TestrailsBot < SlackbotFrd::Bot
   def translate_multiple_testrails(extracted_testrails, sc, user, channel, message, thread_ts)
     change_api = Testrails::Change.new(
       username: $slackbotfrd_conf["testrail_username"],
-      password: $slackbotfrd_conf["testrail_token"]
+      password: $slackbotfrd_conf["testrail_password"]
     )
     testrails = extracted_testrails.map do |tr|
       log_info("Translated multiple C#{tr} for user '#{user}' in channel '#{channel}'")
