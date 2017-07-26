@@ -12,6 +12,7 @@ RUN mkdir /app
 WORKDIR /app
 
 COPY [ "./Gemfile", "/app/" ]
+COPY [ "./Gemfile.lock", "/app/" ]
 RUN bundle install
 
 # Install aescrypt for sourcing secrets
@@ -30,7 +31,8 @@ RUN cd /root/                                                      \
  && rm -rf aescrypt-master master.zip
 
 COPY . /app
-RUN bundle install
+# For some reason we are missing gems at this point
+# RUN bundle install
 
 RUN mkdir /home/docker              \
   && useradd -d /home/docker docker \
