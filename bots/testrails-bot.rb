@@ -29,6 +29,7 @@ class TestrailsBot < SlackbotFrd::Bot
     else
       extracted_testrails = extract_testrailcases(message)
     end
+
     if extracted_testrails.count == 1
       translate_single_testrails(extracted_testrails.first, slack_connection, user, channel, message, thread_ts)
     else
@@ -53,7 +54,7 @@ class TestrailsBot < SlackbotFrd::Bot
       password: $slackbotfrd_conf["testrail_token"]
     )
     testrails = extracted_testrails.map do |tr|
-      log_info("Translated C#{tr} for user '#{user}' in channel '#{channel}'")
+      log_info("Translated multiple C#{tr} for user '#{user}' in channel '#{channel}'")
       build_single_line_testrail_str(tr, change_api)
     end
     send_msg(sc: sc, channel: channel, message: testrails.join("\n"), parse: 'none', thread_ts: thread_ts)
@@ -83,7 +84,7 @@ class TestrailsBot < SlackbotFrd::Bot
   end
 
   def contains_testrails_url(str)
-    str.downcase =~ /(^|\s|\()[htps.:\/<]*canvas\.testrail\.com\/index\.php\?\/cases\/view\/\d{5,9}[.!?,;)\/>]*($|\s)/i
+    str.downcase =~ /(^|\s|\()[htps.:\/<]*canvas\.testrail\.com\/index\.php\?\/cases\/view\/\d{5,9}[\S>]*($|\s)/i
   end
 
   def build_single_line_testrail_str(testrail_id, change_api)
