@@ -15,7 +15,7 @@ module Jira
 
     def search(username_or_name)
       JSON.parse(self.class.get(
-        "/search",
+        '/search',
         basic_auth: basic_auth,
         query: { 'username' => username_or_name },
         timeout: 5

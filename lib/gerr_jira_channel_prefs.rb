@@ -31,22 +31,22 @@ class GerritJiraChannelPrefs
   end
 
   def jira_verbosity_settings
-    %w[
+    %w(
       full_ticket
       link_only
       off
-    ]
+    )
   end
 
   def valid_jira_verbosity?(verbosity)
-     jira_verbosity_settings.include?(verbosity)
+    jira_verbosity_settings.include?(verbosity)
   end
 
   private
 
   def validate_jira_verbosity(verbosity)
-    raise ArgumentError.new(
-      "Verbosity must be one of '#{jira_verbosity_settings.join(', ')}'"
-    ) unless valid_jira_verbosity?(verbosity)
+    unless valid_jira_verbosity?(verbosity)
+      raise ArgumentError, "Verbosity must be one of '#{jira_verbosity_settings.join(', ')}'"
+    end
   end
 end

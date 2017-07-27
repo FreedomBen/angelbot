@@ -6,11 +6,11 @@ class AndyBot < SlackbotFrd::Bot
     'andy :van: :wagon: er',
     ':van: :wagon:',
     ':van::wagon:',
-    ':van:  :wagon:',
+    ':van:  :wagon:'
   ].freeze
 
   def desired_channel?(channel)
-    %w[the-real-commons unicycle bps_test_graveyard].include?(channel)
+    %w(the-real-commons unicycle bps_test_graveyard).include?(channel)
   end
 
   def contains_trigger(message)

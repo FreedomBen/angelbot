@@ -2,12 +2,12 @@ require 'slackbot_frd'
 require 'fuzzy_match'
 
 class Roy < SlackbotFrd::Bot
-  TIME_FILE = '/tmp/it-roybot-time-file.txt'
-  OPEN_EXAMPLE = 'roy: ticket to <summary of the problem>'
+  TIME_FILE = '/tmp/it-roybot-time-file.txt'.freeze
+  OPEN_EXAMPLE = 'roy: ticket to <summary of the problem>'.freeze
   TICKET_REGEX = /^roy:?\s+(?:open)?\s*ticket\s+(?:to|for)\s+(.*)/i
 
   def desired_channel?(channel)
-    %w[it bps_test_graveyard bps_test_graveyard2].include?(channel)
+    %w(it bps_test_graveyard bps_test_graveyard2).include?(channel)
   end
 
   def contains_jiras(str)
@@ -51,14 +51,14 @@ class Roy < SlackbotFrd::Bot
     elsif (m.include?('roy') || m.include?('<!channel') || m.include?('<!group') || m.include?('<!here')) && !contains_jiras(message)
       # return "Hello, IT, have you tried turning it off and on again?"
       return "Need to open a ticket?  You can open a ticket at http://servicedesk.instructure.com or through me by typing:\n```#{OPEN_EXAMPLE}```"
-    elsif m =~ /ticket/ && ((m =~ /file/) || (m =~ /is/ && m =~ /there/) || (m =~ /submit/) || (m =~ /open/) || (m =~ /send/))# && time_expired?
-      #capture_time
+    elsif m =~ /ticket/ && ((m =~ /file/) || (m =~ /is/ && m =~ /there/) || (m =~ /submit/) || (m =~ /open/) || (m =~ /send/)) # && time_expired?
+      # capture_time
       # submit ticket
       # open ticket
       # file ticket
       # is there ticket
       # send ticket
-      #return "No ticket?\n\nhttp://i.imgur.com/avwx7Zj.gif\nhttp://media.giphy.com/media/CHROEms0iVuda/giphy.gif\n\nYou can open a ticket through me by typing something like:\n```#{OPEN_EXAMPLE}```"
+      # return "No ticket?\n\nhttp://i.imgur.com/avwx7Zj.gif\nhttp://media.giphy.com/media/CHROEms0iVuda/giphy.gif\n\nYou can open a ticket through me by typing something like:\n```#{OPEN_EXAMPLE}```"
       return "Need to open a ticket?  You can open a ticket at http://servicedesk.instructure.com or through me by typing:\n```#{OPEN_EXAMPLE}```"
     end
     nil
@@ -69,7 +69,7 @@ class Roy < SlackbotFrd::Bot
     SlackbotFrd::Log.debug("User '#{user}' provided summary '#{summary}' from message '#{message}'")
     return "Can't open a ticket with a blank summary!" if summary.empty?
     # issue_type = ticket_type(summary)
-    issue_type = "Service Request - Other"
+    issue_type = 'Service Request - Other'
     user_info = OpenStruct.new(sc.user_info(user)['profile'])
 
     user_api = Jira::User.new(
@@ -103,24 +103,22 @@ class Roy < SlackbotFrd::Bot
       else
         SlackbotFrd::Log.warn("Problem creating issue under issue type '#{issue_type}' in jira: '#{issue}'")
         return ":doh: :nope: sorry #{user}, something went wrong when opening issue type '#{issue_type}'.  You can " \
-               "do it manually.  Go to http://servicedesk.instructure.com " \
+               'do it manually.  Go to http://servicedesk.instructure.com ' \
                "and click the 'IT Support' button.\n\nTechnical information:\n\n" \
                "```#{issue}```"
       end
     rescue Net::ReadTimeout
       SlackbotFrd::Log.warn("Problem creating issue under issue type '#{issue_type}' in jira for user '#{user}' email '#{reporting_user}'")
       return "Oh no!  Sorry #{user}.  :jira: timed out on us.  _Your ticket " \
-             "may have been created even tho Jira never responded_ (it " \
-             "does that sometimes).  You might want to wait for Jira to " \
-             "come back and then try again.  You can also try to " \
-             "do it manually by going to http://servicedesk.instructure.com " \
+             'may have been created even tho Jira never responded_ (it ' \
+             'does that sometimes).  You might want to wait for Jira to ' \
+             'come back and then try again.  You can also try to ' \
+             'do it manually by going to http://servicedesk.instructure.com ' \
              "and clicking the 'IT Support' button."
     end
   end
 
-  def reassign_reporter
-
-  end
+  def reassign_reporter; end
 
   def jira_link_url(key)
     "https://instructure.atlassian.net/browse/#{key}"
@@ -129,7 +127,7 @@ class Roy < SlackbotFrd::Bot
   def time_expired?
     return true unless File.exist?(TIME_FILE)
     mins_45 = (60 * 45)
-    (JSON.parse(File.read(TIME_FILE))["time"] + mins_45) <= Time.now.to_i
+    (JSON.parse(File.read(TIME_FILE))['time'] + mins_45) <= Time.now.to_i
   end
 
   def capture_time

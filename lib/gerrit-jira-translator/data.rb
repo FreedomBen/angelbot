@@ -2,9 +2,9 @@ require_relative 'gerr_jira_channel_prefs'
 require_relative '../dynamo'
 
 class GerritJiraData
-  FULL = 'full_ticket'
-  LINK = 'link_only'
-  OFF  = 'off'
+  FULL = 'full_ticket'.freeze
+  LINK = 'link_only'.freeze
+  OFF  = 'off'.freeze
 
   attr_reader :channel, :channel_settings
 
@@ -16,9 +16,9 @@ class GerritJiraData
   end
 
   def valid_keys
-    %w[
+    %w(
       jira_expansion
-    ]
+    )
   end
 
   def valid_vals(key)

@@ -1,17 +1,17 @@
 require 'slackbot_frd'
 
 class EchoChamberBot < SlackbotFrd::Bot
-  TRIGGER_WORDS = [
-    'linux',
-    'mac',
-    'android',
-    'ios',
-    'iphone',
-    'windows'
-  ]
+  TRIGGER_WORDS = %w(
+    linux
+    mac
+    android
+    ios
+    iphone
+    windows
+  ).freeze
 
-  GENERIC_STATEMENT_BASE = 'GENERIC_STATEMENT_BASE'
-  SUBJECT_STATEMENT_BASE = 'SUBJECT_STATEMENT_BASE'
+  GENERIC_STATEMENT_BASE = 'GENERIC_STATEMENT_BASE'.freeze
+  SUBJECT_STATEMENT_BASE = 'SUBJECT_STATEMENT_BASE'.freeze
 
   def generic_statement(user)
     [
@@ -22,7 +22,7 @@ class EchoChamberBot < SlackbotFrd::Bot
       "I feel the same way #{user}.",
       "That's such a great point of view #{user}.",
       "#{user} we are vibing here."
-    ].shuffle.first
+    ].sample
   end
 
   def subject_statement(subject)
@@ -30,15 +30,15 @@ class EchoChamberBot < SlackbotFrd::Bot
       "oh yeah, #{SUBJECT_STATEMENT_BASE} is the greatest. :heart:",
       "More people need #{SUBJECT_STATEMENT_BASE} in their lives.",
       "Someday #{SUBJECT_STATEMENT_BASE} will take over the world."
-    ].shuffle.first.gsub(SUBJECT_STATEMENT_BASE, subject)
+    ].sample.gsub(SUBJECT_STATEMENT_BASE, subject)
   end
 
   def desired_channel?(channel)
-    %w[echo_chamber bps_test_graveyard2].include?(channel)
+    %w(echo_chamber bps_test_graveyard2).include?(channel)
   end
 
   def response(user, message)
-    tword = TRIGGER_WORDS.select{ |word| message.downcase.include?(word) }
+    tword = TRIGGER_WORDS.select { |word| message.downcase.include?(word) }
     if tword.count != 1
       generic_statement(user)
     else

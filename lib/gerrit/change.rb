@@ -14,8 +14,10 @@ module Gerrit
     end
 
     def get(id)
-      ret = self.class.get("/#{id}/detail", basic_auth: basic_auth).body.split("\n")
+      ret = self.class.get("/#{id}/detail", basic_auth: basic_auth)
       # gerrit puts some weird cruft in the way at the top
+      return "Error: #{ret.code}" if ret.code != 200
+      ret = ret.body.split("\n")
       ret.shift
       JSON.parse(ret.join("\n"))
     end

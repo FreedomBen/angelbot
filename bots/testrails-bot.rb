@@ -107,7 +107,6 @@ class TestrailsBot < SlackbotFrd::Bot
     result = change_api.get_testcase(testrail_id)
 
     title = result['title']
-    title = title.first(30) + '...' if title.length > 30
     priority = fix_priority(result['priority_id'])
     section_id = result['section_id']
     location = change_api.get_sections(section_id)
@@ -120,6 +119,7 @@ class TestrailsBot < SlackbotFrd::Bot
               "          *Automated?* #{already_automated}\n" \
               "          *Path:*  #{location}"
     else
+      title = title.first(30) + '...' if title.length > 30
       return "Test :rails: :  <#{testrail_url(testrail_id)}|C#{testrail_id}> - [#{title}] - #{priority} - *Automated?* #{already_automated} -*Path:* #{location}"
     end
   rescue StandardError => e
