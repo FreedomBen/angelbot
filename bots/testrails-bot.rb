@@ -3,6 +3,8 @@ require 'securerandom'
 
 require_relative '../lib/testrails/user'
 
+require_relative '../lib/gerrit-jira-translator/data' #used for channel values
+
 class TestrailsBot < SlackbotFrd::Bot
 
   def add_callbacks(slack_connection)
@@ -40,9 +42,10 @@ class TestrailsBot < SlackbotFrd::Bot
       username: $slackbotfrd_conf["testrail_username"],
       password: $slackbotfrd_conf["testrail_password"]
     )
+    data = GerritJiraData.new(channel: channel)
     log_info("Translated C#{extracted_testrail} for user '#{user}' in channel '#{channel}'")
 
-    msg = build_single_line_testrail_str(extracted_testrail, change_api)
+    msg = build_single_line_testrail_str(extracted_testrail, change_api, data)
     send_msg(sc: sc, channel: channel, message: msg, parse: 'none', thread_ts: thread_ts)
   end
 
@@ -51,9 +54,10 @@ class TestrailsBot < SlackbotFrd::Bot
       username: $slackbotfrd_conf["testrail_username"],
       password: $slackbotfrd_conf["testrail_password"]
     )
+    data = GerritJiraData.new(channel: channel)
     testrails = extracted_testrails.map do |tr|
       log_info("Translated multiple C#{tr} for user '#{user}' in channel '#{channel}'")
-      build_single_line_testrail_str(tr, change_api)
+      build_single_line_testrail_str(tr, change_api, data)
     end
     send_msg(sc: sc, channel: channel, message: testrails.join("\n"), parse: 'none', thread_ts: thread_ts)
   end
@@ -85,19 +89,43 @@ class TestrailsBot < SlackbotFrd::Bot
     str.downcase =~ /(^|\s|\()[htps.:\/<]*canvas\.testrail\.com\/index\.php\?\/cases\/view\/\d{5,9}[\S>]*($|\s)/i
   end
 
-  def build_single_line_testrail_str(testrail_id, change_api)
+  def fix_priority(id)
+    case id
+    when 1
+      return ':p: :three:'
+    when 3
+      return ':p: :two:'
+    when 4
+      return ':p: :one:'
+    when 6
+      return ':p: :smokey:'
+    when 7
+      return ':p: STUB'
+    else
+      return -1
+    end
+  end
+
+  def build_single_line_testrail_str(testrail_id, change_api, data)
     begin
       result = change_api.get_testcase(testrail_id)
 
       title = result['title']
       title = title.first(30) + "..." if title.length > 30
-      priority = result['priority_id']
+      priority = fix_priority(result['priority_id'])
       section_id = result['section_id']
       location = change_api.get_sections(section_id)
-
-      # to_be_automated = result['custom_to_be_automated']
       already_automated = result['custom_automated'] ? ':yes:' : ':nope:'
-      return "Test :rails: :  <#{testrail_url(testrail_id)}|C#{testrail_id}> - [#{title}] - *Priority:* #{priority} - *Automated?* #{already_automated} -*Path:* #{location}"
+      # to_be_automated = result['custom_to_be_automated']
+
+      if data.channel_full?
+        return  "Test :rails: <#{testrail_url(testrail_id)}|C#{testrail_id}> - #{priority}" \
+                "          *Title:*  #{title}\n" \
+                "          *Automated?* #{already_automated}" \
+                "          *Path:*  #{location}"
+      else
+        return "Test :rails: :  <#{testrail_url(testrail_id)}|C#{testrail_id}> - [#{title}] - #{priority} - *Automated?* #{already_automated} -*Path:* #{location}"
+      end
     rescue StandardError => e
       SlackbotFrd::Log.warn(
         "Error encountered parsing testrail #{testrail_id}'.  " \
