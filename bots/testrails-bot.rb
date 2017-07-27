@@ -119,9 +119,9 @@ class TestrailsBot < SlackbotFrd::Bot
       # to_be_automated = result['custom_to_be_automated']
 
       if data.channel_full?
-        return  "Test :rails: <#{testrail_url(testrail_id)}|C#{testrail_id}> - #{priority}" \
+        return  "Test :rails: <#{testrail_url(testrail_id)}|C#{testrail_id}> - #{priority}\n" \
                 "          *Title:*  #{title}\n" \
-                "          *Automated?* #{already_automated}" \
+                "          *Automated?* #{already_automated}\n" \
                 "          *Path:*  #{location}"
       else
         return "Test :rails: :  <#{testrail_url(testrail_id)}|C#{testrail_id}> - [#{title}] - #{priority} - *Automated?* #{already_automated} -*Path:* #{location}"
