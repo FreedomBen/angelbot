@@ -2,11 +2,11 @@ require 'slackbot_frd'
 require 'fuzzy_match'
 
 class PandataMoss < SlackbotFrd::Bot
-  OPEN_EXAMPLE = 'moss: ticket to <summary of the problem>'
+  OPEN_EXAMPLE = 'moss: ticket to <summary of the problem>'.freeze
   TICKET_REGEX = /^moss:?\s+(?:open)?\s*ticket\s+(?:to|for)\s+(.*)/i
 
   def desired_channel?(channel)
-    %w[pandata bps_test_graveyard bps_test_graveyard2].include?(channel)
+    %w(pandata bps_test_graveyard bps_test_graveyard2).include?(channel)
   end
 
   def contains_jiras(str)
@@ -57,7 +57,7 @@ class PandataMoss < SlackbotFrd::Bot
     summary = ticket_summary(message)
     SlackbotFrd::Log.debug("User '#{user}' provided summary '#{summary}' from message '#{message}'")
     return "Can't open a ticket with a blank summary!" if summary.empty?
-    issue_type = "Story"
+    issue_type = 'Story'
     user_info = OpenStruct.new(sc.user_info(user)['profile'])
 
     user_api = Jira::User.new(
@@ -91,23 +91,22 @@ class PandataMoss < SlackbotFrd::Bot
       else
         SlackbotFrd::Log.warn("Problem creating issue under issue type '#{issue_type}' in jira: '#{issue}'")
         return ":doh: :nope: sorry #{user}, something went wrong when opening issue type '#{issue_type}'.  You can " \
-               "do it manually.  Go to http://servicedesk.instructure.com " \
+               'do it manually.  Go to http://servicedesk.instructure.com ' \
                "and click the 'IT Support' button.\n\nTechnical information:\n\n" \
                "```#{issue}```"
       end
     rescue Net::ReadTimeout
       SlackbotFrd::Log.warn("Problem creating issue under issue type '#{issue_type}' in jira for user '#{user}' email '#{reporting_user}'")
       return "Oh no!  Sorry #{user}.  :jira: timed out on us.  _Your ticket " \
-             "may have been created even tho Jira never responded_ (it " \
-             "does that sometimes).  You might want to wait for Jira to " \
-             "come back and then try again.  You can also try to " \
-             "do it manually by going to http://servicedesk.instructure.com " \
+             'may have been created even tho Jira never responded_ (it ' \
+             'does that sometimes).  You might want to wait for Jira to ' \
+             'come back and then try again.  You can also try to ' \
+             'do it manually by going to http://servicedesk.instructure.com ' \
              "and clicking the 'IT Support' button."
     end
   end
 
-  def reassign_reporter
-  end
+  def reassign_reporter; end
 
   def jira_link_url(key)
     "https://instructure.atlassian.net/browse/#{key}"

@@ -28,11 +28,11 @@ class DynamoDB
     @client.get_item(
       table_name: ns_table_name(table),
       key: {
-        "id" => primary
+        'id' => primary
       },
       consistent_read: true,
-      #attributes_to_get: %w[one two],
-      return_consumed_capacity: "INDEXES",
+      # attributes_to_get: %w[one two],
+      return_consumed_capacity: 'INDEXES'
     )
   end
 
@@ -64,7 +64,7 @@ class DynamoDB
     @client.list_tables
   end
 
-  alias_method :tables, :list_tables
+  alias tables list_tables
 
   def table_exists?(table_name)
     # We will cache the table names because this is

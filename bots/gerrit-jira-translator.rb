@@ -85,22 +85,22 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     end
   end
 
-  def translate_single_gerrits(extracted_gerrit, sc, user, channel, message, thread_ts)
+  def translate_single_gerrits(extracted_gerrit, sc, user, channel, _message, thread_ts)
     change_api = Gerrit::Change.new(
-      username: $slackbotfrd_conf["gerrit_username"],
-      password: $slackbotfrd_conf["gerrit_password"]
+      username: $slackbotfrd_conf['gerrit_username'],
+      password: $slackbotfrd_conf['gerrit_password']
     )
     log_info("Translated g/#{extracted_gerrit} for user '#{user}' in channel '#{channel}'")
 
     msg = build_single_line_gerrit_str(extracted_gerrit, change_api)
-    #msg = build_full_gerrit_str(extracted_gerrit, change_api.get(extracted_gerrit))
+    # msg = build_full_gerrit_str(extracted_gerrit, change_api.get(extracted_gerrit))
     send_msg(sc: sc, channel: channel, message: msg, parse: 'none', thread_ts: thread_ts)
   end
 
-  def translate_multiple_gerrits(extracted_gerrits, sc, user, channel, message, thread_ts)
+  def translate_multiple_gerrits(extracted_gerrits, sc, user, channel, _message, thread_ts)
     change_api = Gerrit::Change.new(
-      username: $slackbotfrd_conf["gerrit_username"],
-      password: $slackbotfrd_conf["gerrit_password"]
+      username: $slackbotfrd_conf['gerrit_username'],
+      password: $slackbotfrd_conf['gerrit_password']
     )
     gerrits = extracted_gerrits.map do |gn|
       log_info("Translated g/#{gn} for user '#{user}' in channel '#{channel}'")
@@ -121,10 +121,10 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     send_msg(sc: slack_connection, channel: channel, message: message, parse: 'none', thread_ts: thread_ts)
   end
 
-  def translate_full_jiras(slack_connection, user, channel, message)
+  def translate_full_jiras(_slack_connection, user, channel, message)
     issue_api = Jira::Issue.new(
-      username: $slackbotfrd_conf["jira_username"],
-      password: $slackbotfrd_conf["jira_password"]
+      username: $slackbotfrd_conf['jira_username'],
+      password: $slackbotfrd_conf['jira_password']
     )
     jiras = extract_jiras(message).map do |jira|
       log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
@@ -149,41 +149,39 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     end
   end
 
-  def translate_single_abbrev_jira(jira, slack_connection, user, channel)
+  def translate_single_abbrev_jira(jira, _slack_connection, user, channel)
     issue_api = Jira::Issue.new(
-      username: $slackbotfrd_conf["jira_username"],
-      password: $slackbotfrd_conf["jira_password"]
+      username: $slackbotfrd_conf['jira_username'],
+      password: $slackbotfrd_conf['jira_password']
     )
     log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
 
     build_single_line_jira_str(jira, issue_api.get(jira[:id]))
   end
 
-  def translate_multiple_abbrev_jiras(extracted_jiras, slack_connection, user, channel)
+  def translate_multiple_abbrev_jiras(extracted_jiras, _slack_connection, user, channel)
     issue_api = Jira::Issue.new(
-      username: $slackbotfrd_conf["jira_username"],
-      password: $slackbotfrd_conf["jira_password"]
+      username: $slackbotfrd_conf['jira_username'],
+      password: $slackbotfrd_conf['jira_password']
     )
     jiras = extracted_jiras.map do |jira|
       log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
 
-      #jira_link(jira)
+      # jira_link(jira)
       build_single_line_jira_str(jira, issue_api.get(jira[:id]))
     end
 
-    #":jira: :  #{jiras.join('  |  ')}"
+    # ":jira: :  #{jiras.join('  |  ')}"
     jiras.join("\n")
   end
 
   def log_info(message)
-    begin
-      SlackbotFrd::Log.info(message)
-    rescue IOError => e
-    end
+    SlackbotFrd::Log.info(message)
+  rescue IOError => e
   end
 
   def extract_gerrits(str)
-    str.scan(/g\/(\d+)/i).map{ |a| a.first }.uniq
+    str.scan(/g\/(\d+)/i).map(&:first).uniq
   end
 
   def extract_jiras(str)
@@ -210,7 +208,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def gerrit_urls(gerr_nums)
-    gerr_nums.map{ |gn| gerrit_url(gn) }
+    gerr_nums.map { |gn| gerrit_url(gn) }
   end
 
   def jira_url(prefix, jira_num)
@@ -218,34 +216,32 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def jira_urls(jira_nums)
-    jira_nums.map{ |cn| jira_url(cn) }
+    jira_nums.map { |cn| jira_url(cn) }
   end
 
   def build_single_line_gerrit_str(gerrit, change_api)
-    begin
-      change = change_api.get(gerrit)
-      project = change['project']
-      owner = change['owner']['name']
-      subject = change['subject']
-      verified = jenkins_vote(change)
-      code_review = code_review_vote(change)
-      qa = qa_vote(change)
-      product = product_vote(change)
-      verified = verified.empty? ? '' : "( :jenkins: #{verified} )"
-      code_review = code_review.empty? ? '' : "(CR: #{code_review} )"
-      qa = qa.empty? ? '' : "(QA: #{qa} )"
-      product = product.empty? ? '' : "(P: #{product} )"
-      votes = [verified, code_review, qa, product]
-      breaker = votes.all?(&:empty?) ? '' : " - "
+    change = change_api.get(gerrit)
+    project = change['project']
+    owner = change['owner']['name']
+    subject = change['subject']
+    verified = jenkins_vote(change)
+    code_review = code_review_vote(change)
+    qa = qa_vote(change)
+    product = product_vote(change)
+    verified = verified.empty? ? '' : "( :jenkins: #{verified} )"
+    code_review = code_review.empty? ? '' : "(CR: #{code_review} )"
+    qa = qa.empty? ? '' : "(QA: #{qa} )"
+    product = product.empty? ? '' : "(P: #{product} )"
+    votes = [verified, code_review, qa, product]
+    breaker = votes.all?(&:empty?) ? '' : ' - '
 
-      return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> (<#{gerrit_mobile_url(gerrit)}|gerrit-mobile>) - [#{project}] - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
-    rescue StandardError => e
-      SlackbotFrd::Log.warn(
-        "Error encountered parsing gerrit #{gerrit}'.  " \
-        "Message: #{e.message}.\n#{e}"
-      )
-      return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - _error reading status from gerrit_"
-    end
+    return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> (<#{gerrit_mobile_url(gerrit)}|gerrit-mobile>) - [#{project}] - *#{owner}* - _#{subject}_#{breaker}#{votes.join(' ')}"
+  rescue StandardError => e
+    SlackbotFrd::Log.warn(
+      "Error encountered parsing gerrit #{gerrit}'.  " \
+      "Message: #{e.message}.\n#{e}"
+    )
+    return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - _error reading status from gerrit_"
   end
 
   def build_full_gerrit_str(gerrit, change)
@@ -271,7 +267,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
         ''
       end
     end
-    return "" unless change['labels'][category]['all']
+    return '' unless change['labels'][category]['all']
     votes = change['labels'][category]['all'].select do |vote|
       [-2, -1, 1, 2].include?(vote['value'])
     end
@@ -287,12 +283,12 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     votes.each do |vote|
       return "#{plus1}#{name.call(vote)}#{include_name && vote['name'] == 'Jenkins' ? ':jenkins:' : ''}" if vote['value'] == 1
     end
-    ""
+    ''
   rescue NoMethodError => e
     # If something we need is missing from the hash,
     # catch the no method error from dereferencing a
     # nil pointer and just return empty string
-    ""
+    ''
   end
 
   def jenkins_vote(change, include_name = false)
@@ -318,7 +314,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   def build_full_jira_str(jira, issue)
     comp_str = ->() do
       title = '          *Component(s)*:  '
-      component_str(issue).empty? ? "" : "#{title}#{component_str(issue)}\n"
+      component_str(issue).empty? ? '' : "#{title}#{component_str(issue)}\n"
     end
 
     "#{jira_string_header(jira, issue)}" \
@@ -329,7 +325,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def story_points(issue)
-    issue["fields"] && issue["fields"]["customfield_10004"] && issue["fields"]["customfield_10004"].to_s
+    issue['fields'] && issue['fields']['customfield_10004'] && issue['fields']['customfield_10004'].to_s
   end
 
   def story_points_str(issue)
@@ -337,8 +333,8 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def priority_str(issue)
-    if issue["fields"] && issue["fields"]["priority"] && issue["fields"]["priority"]['name']
-      priority_to_emoji(issue["fields"]["priority"]["name"]) || ''
+    if issue['fields'] && issue['fields']['priority'] && issue['fields']['priority']['name']
+      priority_to_emoji(issue['fields']['priority']['name']) || ''
     else
       ''
     end
@@ -346,37 +342,37 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
   def priority_to_emoji(priority)
     {
-      "maintenance" => ":jira_maintenance_priority:",
-      "pressing"    => ":jira_pressing_priority:",
-      "critical"    => ":jira_critical_priority:",
+      'maintenance' => ':jira_maintenance_priority:',
+      'pressing'    => ':jira_pressing_priority:',
+      'critical'    => ':jira_critical_priority:'
     }[priority.downcase]
   end
 
   def story_points_to_emoji(points)
     {
-      "2.0" => ":2storypoints:",
-      "3.0" => ":3storypoints:",
-      "5.0" => ":5storypoints:",
-      "8.0" => ":8storypoints:",
-      "13.0" => ":13storypoints:",
+      '2.0' => ':2storypoints:',
+      '3.0' => ':3storypoints:',
+      '5.0' => ':5storypoints:',
+      '8.0' => ':8storypoints:',
+      '13.0' => ':13storypoints:'
     }[points]
   end
 
   def summary_str(issue)
-    issue["fields"] && issue["fields"]["summary"]
+    issue['fields'] && issue['fields']['summary']
   end
 
   def component_str(issue)
-    if issue["fields"] && issue["fields"]["components"]
-      issue["fields"]["components"].map{|c| c["name"]}.join(", ")
+    if issue['fields'] && issue['fields']['components']
+      issue['fields']['components'].map { |c| c['name'] }.join(', ')
     else
       ''
     end
   end
 
   def status_str(issue)
-    retval = if issue['fields'] && issue["fields"]["status"]
-               issue["fields"]["status"]["name"]
+    retval = if issue['fields'] && issue['fields']['status']
+               issue['fields']['status']['name']
              else
                ''
              end
@@ -384,8 +380,8 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def assigned_to_str(issue)
-    retval = if issue["fields"] && issue["fields"]["assignee"]
-               issue["fields"]["assignee"]["displayName"]
+    retval = if issue['fields'] && issue['fields']['assignee']
+               issue['fields']['assignee']['displayName']
              else
                ''
              end

@@ -15,34 +15,29 @@ module Jira
     end
 
     def get(id)
-      begin
-        JSON.parse(self.class.get("/#{id}", basic_auth: basic_auth, timeout: 5).body)
-      rescue JSON::ParserError => e
-        { error: 'Jira returned invalid JSON (probably an error page in HTML :facepalm: )' }
-      rescue StandardError => e
-        { error: 'Unknown error occurred when querying Jira' }
-      end
+      JSON.parse(self.class.get("/#{id}", basic_auth: basic_auth, timeout: 5).body)
+    rescue JSON::ParserError => e
+      { error: 'Jira returned invalid JSON (probably an error page in HTML :facepalm: )' }
+    rescue StandardError => e
+      { error: 'Unknown error occurred when querying Jira' }
     end
 
     def create(project:, issue_type:, summary:, description:, reporter_name: nil)
-      JSON.parse(self.class.post('/', {
-        body: creation_hash(
-          project: project,
-          issue_type: issue_type,
-          summary: summary,
-          description: description,
-          reporter_name: reporter_name
-        ).to_json,
-        basic_auth: basic_auth,
-        headers: {
-          'Content-Type' => 'application/json'
-        },
-        timeout: 5
-      }).body)
+      JSON.parse(self.class.post('/', body: creation_hash(
+        project: project,
+        issue_type: issue_type,
+        summary: summary,
+        description: description,
+        reporter_name: reporter_name
+      ).to_json,
+                                      basic_auth: basic_auth,
+                                      headers: {
+                                        'Content-Type' => 'application/json'
+                                      },
+                                      timeout: 5).body)
     end
 
-    def set_reporter(issue_id, reporter)
-    end
+    def set_reporter(issue_id, reporter); end
 
     private
 

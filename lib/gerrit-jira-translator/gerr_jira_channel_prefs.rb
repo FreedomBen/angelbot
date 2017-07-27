@@ -5,8 +5,8 @@ class GerritJiraChannelPrefs
     n = GerritJiraChannelPrefs.new
     if hash
       n.jira_expansion = hash[:jira_expansion] ||
-        hash['jira_expansion'] ||
-        default_jira_verbosity
+                         hash['jira_expansion'] ||
+                         default_jira_verbosity
     end
     n
   end
@@ -15,7 +15,7 @@ class GerritJiraChannelPrefs
     if json
       from_hash(JSON.parse(json))
     else
-      self.new
+      new
     end
   end
 
@@ -39,22 +39,22 @@ class GerritJiraChannelPrefs
   end
 
   def jira_verbosity_settings
-    %w[
+    %w(
       full_ticket
       link_only
       off
-    ]
+    )
   end
 
   def valid_jira_verbosity?(verbosity)
-     jira_verbosity_settings.include?(verbosity)
+    jira_verbosity_settings.include?(verbosity)
   end
 
   def changes?(key, val)
     if valid_keys.include?(key)
       send(key) != val
     else
-      raise ArgumentError.new("Invalid key '#{key}'")
+      raise ArgumentError, "Invalid key '#{key}'"
     end
   end
 
@@ -62,26 +62,26 @@ class GerritJiraChannelPrefs
     if valid_keys.include?(key)
       send("#{key}=", val)
     else
-      raise ArgumentError.new("Invalid key '#{key}'")
+      raise ArgumentError, "Invalid key '#{key}'"
     end
   end
 
   def equals?(other)
-    self.jira_expansion == other.jira_expansion
+    jira_expansion == other.jira_expansion
   end
 
   private
 
   def valid_keys
     # These are valid settings for which we can call send()
-    %w[
+    %w(
       jira_expansion
-    ]
+    )
   end
 
   def validate_jira_verbosity(verbosity)
-    raise ArgumentError.new(
-      "Verbosity must be one of '#{jira_verbosity_settings.join(', ')}'"
-    ) unless valid_jira_verbosity?(verbosity)
+    unless valid_jira_verbosity?(verbosity)
+      raise ArgumentError, "Verbosity must be one of '#{jira_verbosity_settings.join(', ')}'"
+    end
   end
 end
