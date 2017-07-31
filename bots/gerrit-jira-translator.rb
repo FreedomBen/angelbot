@@ -217,6 +217,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def build_single_line_gerrit_str(gerrit, change_api)
+<<<<<<< HEAD
     result = change_api.get(gerrit)
     project = result['project']
     owner = result['owner']['name']
@@ -225,6 +226,16 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     code_review = code_review_vote(result)
     qa = qa_vote(result)
     product = product_vote(result)
+=======
+    change = change_api.get(gerrit)
+    project = change['project']
+    owner = change['owner']['name']
+    subject = change['subject']
+    verified = jenkins_vote(change)
+    code_review = code_review_vote(change)
+    qa = qa_vote(change)
+    product = product_vote(change)
+>>>>>>> 3b34054da4e3da520cb0b9560b64b9dfe9cf4e37
     verified = verified.empty? ? '' : "( :jenkins: #{verified} )"
     code_review = code_review.empty? ? '' : "(CR: #{code_review} )"
     qa = qa.empty? ? '' : "(QA: #{qa} )"
@@ -238,7 +249,11 @@ class GerritJiraTranslator < SlackbotFrd::Bot
       "Error encountered parsing gerrit #{gerrit}'.  " \
       "Message: #{e.message}.\n#{e}"
     )
+<<<<<<< HEAD
     return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}>  - #{result} - I don't think that's a valid gerrit"
+=======
+    return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - _error reading status from gerrit_"
+>>>>>>> 3b34054da4e3da520cb0b9560b64b9dfe9cf4e37
   end
 
   def build_full_gerrit_str(gerrit, change)
