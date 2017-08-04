@@ -9,9 +9,14 @@ class GerritJiraData
   attr_reader :channel, :channel_settings
 
   def initialize(channel:)
-    @db = DynamoDB.new(botname: 'gerrit-jira-translator')
+    @db = DynamoDB.new(botname: 'angelbot')
     @channel = channel
-    @db.create_table(channel_settings_table_name, if_not_exist: true)
+
+    # We used to create the table here if it doesn't exist, but I removed the
+    # IAM permissions to harden angel down since table creation is rare and
+    # only needs to be done one time.
+    # @db.create_table(channel_settings_table_name, if_not_exist: true)
+
     retrieve_channel_settings(channel)
   end
 

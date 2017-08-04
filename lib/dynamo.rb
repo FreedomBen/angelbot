@@ -13,7 +13,6 @@ class DynamoDB
   end
 
   def put_item(table:, primary:, attrs: {})
-    create_table(ns_table_name(table))
     @client.put_item(
       table_name: ns_table_name(table),
       item: {
@@ -24,7 +23,6 @@ class DynamoDB
   end
 
   def get_item(table:, primary:)
-    create_table(ns_table_name(table))
     @client.get_item(
       table_name: ns_table_name(table),
       key: {
