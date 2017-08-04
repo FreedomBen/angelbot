@@ -1,20 +1,20 @@
 require 'slackbot_frd'
 
 class Moss < SlackbotFrd::Bot
-  EMERGENCY_TRIGGER_WORDS = %w(
+  EMERGENCY_TRIGGER_WORDS = %w[
     emergency
     urgent
-  ).freeze
+  ].freeze
 
-  CHANNEL_TRIGGER_WORDS = %w(
+  CHANNEL_TRIGGER_WORDS = %w[
     <!channel
     <!group
     <!here
-  ).freeze
+  ].freeze
 
-  NORMAL_TRIGGER_WORDS = %w(
+  NORMAL_TRIGGER_WORDS = %w[
     moss
-  ).freeze
+  ].freeze
 
   EMERGENCY_MESSAGES = [
     '"Dir sir/madam, FIRE!"',
@@ -35,7 +35,7 @@ class Moss < SlackbotFrd::Bot
   ALL_TRIGGER_WORDS = EMERGENCY_TRIGGER_WORDS + CHANNEL_TRIGGER_WORDS + NORMAL_TRIGGER_WORDS
 
   def desired_channel?(channel)
-    %w(it bps_test_graveyard).include?(channel)
+    %w[it bps_test_graveyard].include?(channel)
   end
 
   def contains_any_trigger(_message)

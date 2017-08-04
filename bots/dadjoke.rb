@@ -8,7 +8,7 @@ class DadjokeBot < SlackbotFrd::Bot
   end
 
   def matches_channel?(channel)
-    %w(bps_test_graveyard dadjokes).include?(channel)
+    %w[bps_test_graveyard dadjokes].include?(channel)
   end
 
   def get_joke

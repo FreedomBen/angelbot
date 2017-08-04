@@ -10,10 +10,10 @@ class AndyBot < SlackbotFrd::Bot
   ].freeze
 
   def desired_channel?(channel)
-    %w(the-real-commons unicycle bps_test_graveyard).include?(channel)
+    %w[the-real-commons unicycle bps_test_graveyard].include?(channel)
   end
 
-  def contains_trigger(message)
+  def contains_trigger(_message)
     false
     # TRIGGER_WORDS.any? { |word| message.downcase.include?(word) }
   end

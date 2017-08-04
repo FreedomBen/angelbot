@@ -1,14 +1,14 @@
 require 'slackbot_frd'
 
 class EchoChamberBot < SlackbotFrd::Bot
-  TRIGGER_WORDS = %w(
+  TRIGGER_WORDS = %w[
     linux
     mac
     android
     ios
     iphone
     windows
-  ).freeze
+  ].freeze
 
   GENERIC_STATEMENT_BASE = 'GENERIC_STATEMENT_BASE'.freeze
   SUBJECT_STATEMENT_BASE = 'SUBJECT_STATEMENT_BASE'.freeze
@@ -34,7 +34,7 @@ class EchoChamberBot < SlackbotFrd::Bot
   end
 
   def desired_channel?(channel)
-    %w(echo_chamber bps_test_graveyard2).include?(channel)
+    %w[echo_chamber bps_test_graveyard2].include?(channel)
   end
 
   def response(user, message)

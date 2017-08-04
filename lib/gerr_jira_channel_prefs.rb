@@ -31,11 +31,11 @@ class GerritJiraChannelPrefs
   end
 
   def jira_verbosity_settings
-    %w(
+    %w[
       full_ticket
       link_only
       off
-    )
+    ]
   end
 
   def valid_jira_verbosity?(verbosity)

@@ -272,7 +272,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def vote(category, change, minus1: ':-1:', minus2: ':x:', plus1: ':+1:', plus2: ':plus2:', include_name: false)
-    name = ->(vote) do
+    name = lambda do |vote|
       if include_name
         " - #{vote['name']}"
       else
@@ -330,7 +330,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def build_full_jira_str(jira, issue)
-    comp_str = ->() do
+    comp_str = lambda do
       title = '          *Component(s)*:  '
       component_str(issue).empty? ? '' : "#{title}#{component_str(issue)}\n"
     end

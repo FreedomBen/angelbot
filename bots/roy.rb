@@ -7,7 +7,7 @@ class Roy < SlackbotFrd::Bot
   TICKET_REGEX = /^roy:?\s+(?:open)?\s*ticket\s+(?:to|for)\s+(.*)/i
 
   def desired_channel?(channel)
-    %w(it bps_test_graveyard bps_test_graveyard2).include?(channel)
+    %w[it bps_test_graveyard bps_test_graveyard2].include?(channel)
   end
 
   def contains_jiras(str)

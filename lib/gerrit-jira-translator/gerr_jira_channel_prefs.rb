@@ -39,11 +39,11 @@ class GerritJiraChannelPrefs
   end
 
   def jira_verbosity_settings
-    %w(
+    %w[
       full_ticket
       link_only
       off
-    )
+    ]
   end
 
   def valid_jira_verbosity?(verbosity)
@@ -74,9 +74,9 @@ class GerritJiraChannelPrefs
 
   def valid_keys
     # These are valid settings for which we can call send()
-    %w(
+    %w[
       jira_expansion
-    )
+    ]
   end
 
   def validate_jira_verbosity(verbosity)

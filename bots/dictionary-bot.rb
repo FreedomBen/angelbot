@@ -67,7 +67,7 @@ class Definition
       <<-DEFINITION
 Definition for: *#{@word}*
     _#{@fl} | #{@hw} | #{@pr}_
-#{@definitions.select { |d| !d.empty? }.map.with_index { |d, i| "    #{i + 1} - #{d}" }.join("\n")}
+#{@definitions.reject(&:empty?).map.with_index { |d, i| "    #{i + 1} - #{d}" }.join("\n")}
       DEFINITION
     end
   end

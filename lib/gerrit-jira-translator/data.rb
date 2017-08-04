@@ -16,9 +16,9 @@ class GerritJiraData
   end
 
   def valid_keys
-    %w(
+    %w[
       jira_expansion
-    )
+    ]
   end
 
   def valid_vals(key)

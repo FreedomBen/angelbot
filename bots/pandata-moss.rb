@@ -6,7 +6,7 @@ class PandataMoss < SlackbotFrd::Bot
   TICKET_REGEX = /^moss:?\s+(?:open)?\s*ticket\s+(?:to|for)\s+(.*)/i
 
   def desired_channel?(channel)
-    %w(pandata bps_test_graveyard bps_test_graveyard2).include?(channel)
+    %w[pandata bps_test_graveyard bps_test_graveyard2].include?(channel)
   end
 
   def contains_jiras(str)
