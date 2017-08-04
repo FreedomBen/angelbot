@@ -41,4 +41,7 @@ RUN mkdir /home/docker              \
 ENV PATH /usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 USER docker
 
+RUN echo 'alias start=/app/scripts/start-bots.sh' >> /home/docker/.bashrc
+RUN echo 'alias edit="vim /usr/local/bundle/gems/slackbot_frd-0.3.3/lib/slackbot_frd/lib/slack_connection.rb"' >> /home/docker/.bashrc
+
 CMD [ "dumb-init", "slackbot-frd", "start" ]
