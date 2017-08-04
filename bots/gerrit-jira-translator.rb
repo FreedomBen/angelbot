@@ -130,7 +130,10 @@ class GerritJiraTranslator < SlackbotFrd::Bot
       log_info("Translated #{jira[:prefix]}-#{jira[:number]} for user '#{user}' in channel '#{channel}'")
 
       issue_api_get = issue_api.get(jira[:id])
-      build_full_jira_str(jira, issue_api_get)
+      if issue_api_get[:error]
+        "#{jira[:id]} - #{issue_api_get[:error]}"
+      else
+        build_full_jira_str(jira, issue_api_get)
       end
     end
 
@@ -217,16 +220,6 @@ class GerritJiraTranslator < SlackbotFrd::Bot
   end
 
   def build_single_line_gerrit_str(gerrit, change_api)
-<<<<<<< HEAD
-    result = change_api.get(gerrit)
-    project = result['project']
-    owner = result['owner']['name']
-    subject = result['subject']
-    verified = jenkins_vote(result)
-    code_review = code_review_vote(result)
-    qa = qa_vote(result)
-    product = product_vote(result)
-=======
     change = change_api.get(gerrit)
     project = change['project']
     owner = change['owner']['name']
@@ -235,7 +228,6 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     code_review = code_review_vote(change)
     qa = qa_vote(change)
     product = product_vote(change)
->>>>>>> 3b34054da4e3da520cb0b9560b64b9dfe9cf4e37
     verified = verified.empty? ? '' : "( :jenkins: #{verified} )"
     code_review = code_review.empty? ? '' : "(CR: #{code_review} )"
     qa = qa.empty? ? '' : "(QA: #{qa} )"
@@ -249,11 +241,7 @@ class GerritJiraTranslator < SlackbotFrd::Bot
       "Error encountered parsing gerrit #{gerrit}'.  " \
       "Message: #{e.message}.\n#{e}"
     )
-<<<<<<< HEAD
-    return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}>  - #{result} - I don't think that's a valid gerrit"
-=======
     return ":gerrit: :  <#{gerrit_url(gerrit)}|g/#{gerrit}> - _error reading status from gerrit_"
->>>>>>> 3b34054da4e3da520cb0b9560b64b9dfe9cf4e37
   end
 
   def build_full_gerrit_str(gerrit, change)
@@ -321,12 +309,6 @@ class GerritJiraTranslator < SlackbotFrd::Bot
 
   def build_single_line_jira_str(jira, issue)
     ":jira: :  #{priority_str(issue)}  #{story_points_str(issue)} #{jira_link(jira)} - #{summary_str(issue)}"
-    rescue StandardError => e
-        SlackbotFrd::Log.warn(
-          "Error encountered parsing testrail #{testrail_id}'.  " \
-          "Message: #{e.message}.\n#{e}"
-        )
-      return "T:jira: :   <#{testrail_url(testrail_id)}|C#{testrail_id}> - #{result} - I don't think that's a valid test case number"
   end
 
   def build_full_jira_str(jira, issue)
@@ -340,12 +322,6 @@ class GerritJiraTranslator < SlackbotFrd::Bot
     "#{comp_str.call}" \
     "          *Status:*  #{status_str(issue)}\n" \
     "          *Assigned to*:  #{assigned_to_str(issue)}"
-    rescue StandardError => e
-        SlackbotFrd::Log.warn(
-          "Error encountered parsing testrail #{testrail_id}'.  " \
-          "Message: #{e.message}.\n#{e}"
-        )
-      return ":jira: :  <#{testrail_url(testrail_id)}|C#{testrail_id}> - #{result} - I don't think that's a valid test case number"
   end
 
   def story_points(issue)

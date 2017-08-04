@@ -15,13 +15,11 @@ module Jira
     end
 
     def get(id)
-      ret = self.class.get("/#{id}", basic_auth: basic_auth, timeout: 5)
-      return "Error: #{ret.code}" if ret.code != 200
-      ret = JSON.parse(ret.body)
+      JSON.parse(self.class.get("/#{id}", basic_auth: basic_auth, timeout: 5).body)
     rescue JSON::ParserError => e
-      { return 'Error: Jira returned invalid JSON (probably an error page in HTML :facepalm: )' }
+      { error: 'Jira returned invalid JSON (probably an error page in HTML :facepalm: )' }
     rescue StandardError => e
-      { return 'Error: Unknown error occurred when querying Jira' }
+      { error: 'Unknown error occurred when querying Jira' }
     end
 
     def create(project:, issue_type:, summary:, description:, reporter_name: nil)
