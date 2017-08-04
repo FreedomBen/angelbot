@@ -494,6 +494,15 @@ class GerritJiraTranslator < SlackbotFrd::Bot
         avatar_emoji: ':moss:',
         thread_ts: thread_ts
       )
+    elsif %w[secteam-core security secops].include?(channel)
+      sc.send_message(
+        channel: channel,
+        message: message,
+        parse: parse,
+        username: 'Tyrion',
+        avatar_emoji: ':tyrion:',
+        thread_ts: thread_ts
+      )
     elsif bot == :devil
       sc.send_message(
         channel: channel,
