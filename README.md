@@ -59,12 +59,13 @@ or manually using:
 docker run -it --rm --name angelbot angelbot bash
 ```
 
-_NOTE:  The reason we are calling `bash` in the container is because the decryption key to unlock the secrets must be currently typed in manually._
+_NOTE:  The reason we are calling `bash` in the container is because currently the decryption key to unlock the secrets must be typed in manually._
 
 Once the container is running, use the `start` alias to kick things off.  It will prompt you for the decryption key (password) which you will need to enter:
 
 ```bash
-start
+$ start
+Enter password:
 ```
 
 Angel bot should now be running!  If you're curious about implementation, read on for some explanation.
