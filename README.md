@@ -27,6 +27,14 @@ Angel bot uses [slackbot_frd](https://github.com/FreedomBen/slackbot_frd)
 
 ## Running in production
 
+### Provisioning the VM
+
+Any VM service will do.  Angelbot runs in docker, and has been hosted on Digital Ocean and AWS EC2 at various times.  The important part is that you install docker.  Once docker is installed, clone this repo:
+
+```bash
+git clone https://github.com/FreedomBen/angelbot.git
+```
+
 ### Building/Starting the instance
 
 #### Building
@@ -81,6 +89,16 @@ The `scripts/start-bots.sh` script will call `aescrypt` to decrypt the secrets f
 ```bash
 . <(aescrypt -d angelbot.aes -o -) || echo 'Doh password was wrong'
 slackbot-frd start
+```
+
+#### Deploying changes/Updating the source code
+
+Deploying changes is as simple as SSHing in to the VM, then change to the code directory and run:
+
+```bash
+git pull --rebase
+./scripts/build.sh
+./scripts/run-container.sh
 ```
 
 ### Modifying the secrets file `angelbot.aes`:
