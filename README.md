@@ -62,6 +62,23 @@ This builds an image named "angelbot".  If you give it a different name, you'll 
 
 #### Starting
 
+_NOTE: The tmux portion is optional, but recommended_
+
+If you're not in a `tmux` session yet, kick one off:
+
+```bash
+tmux
+```
+
+Or if one already exists, find it and attach to it:
+
+```bash
+tmux ls           # list current sessions
+tmux at -t <num>  # attach to session <num> e.g:  0
+```
+
+Check out the [tmux](#tmux-tips) section for a quick rundown of common tmux things that are handy.
+
 Once the image is [built](#building), you can run it with the handy script:
 
 ```bash
@@ -105,7 +122,7 @@ signals to ensure that the connection is still up.  This is good because every o
 slack will stop responding on the other end, but the socket is never closed.  Without a ping/pong
 check, angelbot will happily continue running thinking everything is fine, when in fact it is not.
 
-If the slack server fails to answer the "ping" message with a "pong" after a few seconds, 
+If the slack server fails to answer the "ping" message with a "pong" after a few seconds,
 [slackbot_frd](https://github.com/FreedomBen/slackbot_frd) will tear down the connection and
 restart it.  This has successfully been done for years now in production.
 
@@ -120,7 +137,55 @@ Deploying changes is as simple as SSHing in to the VM, then change to the code d
 ```bash
 git pull --rebase
 ./scripts/build.sh
+```
+
+Then attach to the tmux session and restart the container:
+
+```bash
+tmux at  # if not already attached
+# <Ctrl+c> in running window
 ./scripts/run-container.sh
+start
+# Enter password
+```
+
+#### tmux tips
+
+Start a new session:
+
+```bash
+tmux
+```
+
+Attach to existing session:
+
+```bash
+tmux ls           # list current sessions
+tmux at -t <num>  # attach to session <num> e.g:  0
+```
+
+Detach from session:
+
+```
+<Ctrl+b> d
+```
+
+Split current pane horizontally:
+
+```
+<Ctrl+b><Ctrl+d>
+```
+
+Split current pane vertically:
+
+```
+<Ctrl+b><Ctrl+s>
+```
+
+Navigate panes:
+
+```
+<Ctrl+b> h   # h, j, k, l for left, up, down, or right (like vim)
 ```
 
 ### Modifying the secrets file `angelbot.aes`:
