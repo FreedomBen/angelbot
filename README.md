@@ -12,8 +12,8 @@ Currently Angel Bot has the following skills:
 
 ## How do I start up Angel Bot for development?
 
-* Add your slack token to `slackbot-frd.conf` in the provided spot (or as an env var, which is recommend for production environmnets).  For more information see [the slackbot_frd documentation](https://github.com/FreedomBen/slackbot_frd#prestantious--eximious--how-do-i-start)
-* Add your Merriam Webster dictionary keys to `slackbot-frd.conf` if you want to use the dictionary bot
+* Add your slack token to `slackbot-frd.conf` in the provided spot (or set it as an env var, which is recommended for production environments).  For more information see [the slackbot_frd documentation](https://github.com/FreedomBen/slackbot_frd#prestantious--eximious--how-do-i-start)
+* Add your Merriam Webster dictionary keys to `slackbot-frd.conf` (or the env var) if you want to use the dictionary bot
 * run `bundle install`
 * run `slackbot-frd start` from the top-level directory
 
@@ -29,11 +29,18 @@ Angel bot uses [slackbot_frd](https://github.com/FreedomBen/slackbot_frd)
 
 ### Provisioning the VM
 
-Any VM service will do.  Angelbot runs in docker, and has been hosted on Digital Ocean and AWS EC2 at various times.  The important part is that you install docker.  Once docker is installed, clone this repo:
+Any VM service provider will do.  Angelbot runs in docker, and has been hosted on Digital Ocean and AWS EC2 at various times.  The important part is that you install docker on your base image.  Once docker is installed, clone this repo:
 
 ```bash
 git clone https://github.com/FreedomBen/angelbot.git
 ```
+
+You will also probably want to install some additional tools on the system, such as `tmux`
+(which is useful for maintaining the session after the SSH connection is closed.
+Instructions in this guide will assume you are using tmux, with the provided `tmux.conf`
+file installed at `$HOME/.tmux.conf` (you can use the script `./dotfiles/update-dot-files.sh`
+to do this for you, but be advised it will stomp on existing files (which you probably don't
+want to do on your dev machine, only on the angelbot server)).
 
 ### Building/Starting the instance
 
@@ -45,7 +52,7 @@ There is a handy script located at `scripts/build.sh` that will build you an ima
 ./scripts/build.sh
 ```
 
-alternatively you can build it manually from the project root by running:
+Alternatively you can build it manually from the project root by running:
 
 ```bash
 docker build -t angelbot .
@@ -90,6 +97,21 @@ The `scripts/start-bots.sh` script will call `aescrypt` to decrypt the secrets f
 . <(aescrypt -d angelbot.aes -o -) || echo 'Doh password was wrong'
 slackbot-frd start
 ```
+
+##### Restarts and ping/pong
+
+The underlying [slackbot_frd](https://github.com/FreedomBen/slackbot_frd) library uses ping/pong
+signals to ensure that the connection is still up.  This is good because every once in a while
+slack will stop responding on the other end, but the socket is never closed.  Without a ping/pong
+check, angelbot will happily continue running thinking everything is fine, when in fact it is not.
+
+If the slack server fails to answer the "ping" message with a "pong" after a few seconds, 
+[slackbot_frd](https://github.com/FreedomBen/slackbot_frd) will tear down the connection and
+restart it.  This has successfully been done for years now in production.
+
+Occasionally however, something strange will happen and you will need to manually restart angelbot.
+When this occurs, simply navigate to the running window (in tmux for example) and Ctrl+C the instance,
+then restart it with normal procedure of running `start`
 
 #### Deploying changes/Updating the source code
 
@@ -138,6 +160,14 @@ aescrypt -e angelbot
 
 `rm` the plaintext file and commit your updated version to the repo.
 
+_TIP:  If you just want to view the contents of the file, you can print it to the terminal with:_
+
+```bash
+aescrypt -d -o - angelbot.aes
+```
+
+_Keep in mind tho that the contents will stick around in the tmux buffer so be discriminating about where you do this._
+
 ### Periodic Maintenance
 
 #### Installing updates
@@ -169,10 +199,10 @@ Currently a single angel bot instance more than meets the demand at Instructure.
 1.  Multiple instances of angelbot on the same EC2 instance
 1.  Multiple EC2 instances running one or more instances of angelbot
 
-The way it is currently, running _n_ instances of angel bot will result in _n_ responses to every trigger.  This is obviously terrible.  To correct this, there are a couple strategies to choose from (ordererd by what sound like the best options to me currently):
+The way it is currently, running _n_ instances of angel bot will result in _n_ responses to every trigger.  This is obviously terrible.  To correct this, there are a couple strategies to choose from (ordered by what sound like the best options to me currently):
 
 1.  Have each instance only answer some non-intersecting subset of channels:  E.g.:  Instance 0 is listening in channels a, b, and c (busy channels) while Instance 1 listens in all other channels
-    - To accomplish this, you will need to modify the bot code to check for the appropriate channel.  There a couple of ways to do this.  See `greeting-bot.rb` for a good example (it uses slackbot_frd dto do the filtering rather than checking `channel == 'mychannel'`.  If using a subset tho, I don't think currently works with slackbot_frd so you might need to do something like `if %w[c1, c2].include?(channel)`
+    - To accomplish this, you will need to modify the bot code to check for the appropriate channel.  There a couple of ways to do this.  See `greeting-bot.rb` for a good example (it uses slackbot_frd to do the filtering rather than checking `channel == 'mychannel'`.  If using a subset tho, I don't think currently works with slackbot_frd so you might need to do something like `if %w[c1, c2].include?(channel)`
 1.  Have each instance run a non-intersecting subset of bots.  E.g. Instance 0 runs the gerrit-jira translator (main source of traffic) and instance 1 runs all the others
 
 _NOTE:  The scripts in `scripts/*` will need to be modified to use different container name based on the instance, because currently if starting multiple instances on the same docker daemon, there will be a name conflict_
