@@ -11,10 +11,16 @@ if is_docker_user; then
   . <(aescrypt -d angelbot.aes -o -) || echo 'Doh password was wrong'
   slackbot-frd start
 else
+  echo ""
   echo "Looks like you aren't in the docker container..."
   echo "I'll start it for you.  Once it starts, run this script inside it"
   echo ""
   echo "    ./scripts/start-bots.sh"
+  echo ""
+  echo "or use the alias:"
+  echo ""
+  echo "    start"
+  echo ""
   if [ -d "scripts" ]; then
     ./scripts/run-container.sh
   elif [ -x "run-container.sh" ]; then
