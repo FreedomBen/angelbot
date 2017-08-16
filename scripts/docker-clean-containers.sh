@@ -35,4 +35,4 @@ while read -r line; do
 				docker rm "$ID";
 		fi;
 done < <(docker ps -a | grep -E 'Exited|Created');
-echo "Done"
+echo -e "${color_cyan}Done${color_restore}"
