@@ -5,4 +5,4 @@ declare -rx color_cyan='\033[0;36m'
 
 echo -e "${color_cyan}Deleting all orphaned volumes...${color_restore}";
 docker volume ls -qf dangling=true | xargs -r docker volume rm
-echo "${color_cyan}Done${color_restore}"
+echo -e "${color_cyan}Done${color_restore}"
