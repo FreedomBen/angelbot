@@ -1,5 +1,7 @@
 # Angel Bot
 
+A Slack bot to help faciliate better productivity, especially when working with Jira and/or Gerrit.
+
 ## What does Angel Bot do?
 
 Currently Angel Bot has the following skills:
