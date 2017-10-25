@@ -15,10 +15,10 @@ class PsaBot < SlackbotFrd::Bot
         SlackbotFrd::Log.info("Creating PSA for user '#{user}' in channel '#{channel}'")
 
         update_psa_page(
-          author: slack_connection.user_id_to_name(user),
+          author: user,
           created_at: Time.at(timestamp.to_f).utc.to_s,
-          channel: slack_connection.channel_id_to_name(channel),
-          channel_id: channel,
+          channel: channel,
+          channel_id: slack_connection.channel_name_to_id(channel),
           ts: timestamp,
           message: message
         )
