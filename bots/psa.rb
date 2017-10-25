@@ -15,6 +15,7 @@ class PsaBot < SlackbotFrd::Bot
         SlackbotFrd::Log.info("Creating PSA for user '#{user}' in channel '#{channel}'")
 
         update_psa_page(
+          slack_connection: slack_connection,
           posted_by: user,
           channel_id: channel,
           timestamp: timestamp,
@@ -32,7 +33,7 @@ class PsaBot < SlackbotFrd::Bot
     end
   end
 
-  def update_psa_page(posted_by:, channel_id:, timestamp:, message:)
+  def update_psa_page(slack_connection:, posted_by:, channel_id:, timestamp:, message:)
     page_api = Confluence::Page.new(
       username: $slackbotfrd_conf['jira_username'],
       password: $slackbotfrd_conf['jira_password']
