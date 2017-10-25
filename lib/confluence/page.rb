@@ -22,11 +22,13 @@ module Confluence
     end
 
     def update(id, title:, content:, version:)
-      JSON.parse(self.class.put("/#{id}", body: update_hash(
+      body = update_hash(
         title: title,
         content: content,
         version: version
-      ).to_json,
+      ).to_json
+
+      JSON.parse(self.class.put("/#{id}", body: body,
                                           basic_auth: basic_auth,
                                           headers: {
                                             'Content-Type' => 'application/json'
@@ -34,12 +36,12 @@ module Confluence
                                           timeout: 5).body)
     end
 
-    def prepend_content(page_id:, user:, channel:, timestamp:, content:, team_id:)
+    def prepend_content(page_id:, user:, channel:, channel_id:, timestamp:, content:)
       @user = user
       @channel = channel
+      @channel_id = channel_id
       @timestamp = timestamp
       @page = get page_id
-      @team_id = team_id
 
       update(
         page_id,
@@ -74,14 +76,19 @@ module Confluence
       }
     end
 
+    def slack_url(channel_id, timestamp)
+      "https://instructure.slack.com/archives/#{channel_id}/p#{timestamp.to_s.delete('.')}"
+    end
+
     def prepended_html(content)
-      # TODO: Link to message, possibly using @team_id
       "
-        <ul>
-          <li><h3>#{content}</h3></li>
-          <li>By #{@user} in #{@channel} on #{@timestamp}</li>
-        </ul>
-        <br><br>
+        <p>
+          <span style='font-size: 12.0px;font-weight: bold;'>Posted by #{@user} in ##{@channel} on <a href='#{slack_url(@channel_id, @timestamp)}'>#{Time.at(@timestamp).utc}</a></span>
+        </p>
+        <blockquote>
+          <p>#{content}</p>
+        </blockquote>
+        <br /><br />
         #{@page['body']['storage']['value']}
       "
     end

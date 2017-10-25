@@ -4,7 +4,6 @@ require_relative '../lib/confluence/page'
 
 class PsaBot < SlackbotFrd::Bot
   PSA_PAGE_ID = 134_557_264
-  TEAM_ID = 'T028ZAGUD'.freeze
 
   def contains_trigger(message)
     message =~ /(p-?s-?a+y+|ps-?he+y+|psa!)/i
@@ -14,13 +13,14 @@ class PsaBot < SlackbotFrd::Bot
     slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if message && user != :bot && user != 'angel' && timestamp != thread_ts && contains_trigger(message)
         SlackbotFrd::Log.info("Creating PSA for user '#{user}' in channel '#{channel}'")
+
         update_psa_page(
           posted_by: user,
-          channel: channel,
+          channel_id: channel,
           timestamp: timestamp,
-          thread_ts: thread_ts,
           message: message
         )
+
         slack_connection.send_message(
           channel: channel,
           message: 'View the above message, as well as the other Public Service Announcements, here: https://instructure.atlassian.net/wiki/spaces/ENG/pages/134557264/PSAs',
@@ -32,7 +32,7 @@ class PsaBot < SlackbotFrd::Bot
     end
   end
 
-  def update_psa_page(posted_by:, channel:, timestamp:, thread_ts:, message:)
+  def update_psa_page(posted_by:, channel_id:, timestamp:, message:)
     page_api = Confluence::Page.new(
       username: $slackbotfrd_conf['jira_username'],
       password: $slackbotfrd_conf['jira_password']
@@ -40,9 +40,9 @@ class PsaBot < SlackbotFrd::Bot
 
     page_api.prepend_content(
       page_id: PSA_PAGE_ID,
-      team_id: TEAM_ID,
-      user: posted_by,
-      channel: channel,
+      user: slack_connection.user_id_to_name(posted_by),
+      channel: slack_connection.channel_id_to_name(channel_id),
+      channel_id: channel_id,
       timestamp: timestamp,
       content: message
     )
