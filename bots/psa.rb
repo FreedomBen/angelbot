@@ -14,29 +14,20 @@ class PsaBot < SlackbotFrd::Bot
     slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if message && user != :bot && user != 'angel' && timestamp != thread_ts && contains_trigger(message)
         SlackbotFrd::Log.info("Creating PSA for user '#{user}' in channel '#{channel}'")
-        begin
-          update_psa_page(
-            posted_by: user,
-            channel: channel,
-            timestamp: timestamp,
-            thread_ts: thread_ts,
-            message: message
-          )
-          slack_connection.send_message(
-            channel: channel,
-            message: 'View the above message, as well as the other Public Service Announcements, here: https://instructure.atlassian.net/wiki/spaces/ENG/pages/134557264/PSAs',
-            thread_ts: thread_ts,
-            username: 'PS-Hey Bot',
-            avatar_emoji: ':robot-dance:'
-          )
-        rescue
-          slack_connection.send_im(
-            user: user,
-            message: 'Uh oh! An error occurred when saving your PSA. You can double check to see if your message was saved correctly here: https://instructure.atlassian.net/wiki/spaces/ENG/pages/134557264/PSAs',
-            username: 'PS-Hey Bot',
-            avatar_emoji: ':robot-dance:'
-          )
-        end
+        update_psa_page(
+          posted_by: user,
+          channel: channel,
+          timestamp: timestamp,
+          thread_ts: thread_ts,
+          message: message
+        )
+        slack_connection.send_message(
+          channel: channel,
+          message: 'View the above message, as well as the other Public Service Announcements, here: https://instructure.atlassian.net/wiki/spaces/ENG/pages/134557264/PSAs',
+          thread_ts: thread_ts,
+          username: 'PS-Hey Bot',
+          avatar_emoji: ':robot-dance:'
+        )
       end
     end
   end
