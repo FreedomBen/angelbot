@@ -29,7 +29,7 @@ class PsaBot < SlackbotFrd::Bot
             username: 'PS-Hey Bot',
             avatar_emoji: ':robot-dance:'
           )
-        rescue e
+        rescue
           slack_connection.send_message(
             channel: user,
             message: 'Uh oh! An error occurred when saving your PSA. You can double check to see if your message was saved correctly here: https://instructure.atlassian.net/wiki/spaces/ENG/pages/134557264/PSAs',
