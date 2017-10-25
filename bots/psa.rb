@@ -16,7 +16,7 @@ class PsaBot < SlackbotFrd::Bot
 
         update_psa_page(
           author: slack_connection.user_id_to_name(user),
-          created_at: Time.at(timestamp).utc.to_s,
+          created_at: Time.at(timestamp.to_f).utc.to_s,
           channel: slack_connection.channel_id_to_name(channel),
           channel_id: channel,
           ts: timestamp,
