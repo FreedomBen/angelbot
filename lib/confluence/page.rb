@@ -34,14 +34,12 @@ module Confluence
                                           timeout: 5).body)
     end
 
-    def prepend_content(page_id:, user:, channel:, channel_id:, timestamp:, thread_ts:, content:, team_id:)
+    def prepend_content(page_id:, user:, channel:, timestamp:, content:, team_id:)
       @user = user
       @channel = channel
-      @channel_id = channel_id
       @timestamp = timestamp
       @page = get page_id
       @team_id = team_id
-      @thread_ts = thread_ts
 
       update(
         page_id,
@@ -77,10 +75,11 @@ module Confluence
     end
 
     def prepended_html(content)
+      # TODO: Link to message, possibly using @team_id
       "
         <ul>
           <li><h3>#{content}</h3></li>
-          <li><a href='slack://channel?team_id=#{@team_id}&id=#{@channel_id}&message=#{@thread_ts}'>By #{@user} in #{@channel} on #{@timestamp}</a></li>
+          <li>By #{@user} in #{@channel} on #{@timestamp}</li>
         </ul>
         <br><br>
         #{@page['body']['storage']['value']}

@@ -43,9 +43,7 @@ class PsaBot < SlackbotFrd::Bot
       team_id: TEAM_ID,
       user: posted_by,
       channel: channel,
-      channel_id: channel_name_to_id(channel),
       timestamp: timestamp,
-      thread_ts: thread_ts,
       content: message
     )
   end
