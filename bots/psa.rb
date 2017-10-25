@@ -46,7 +46,7 @@ class PsaBot < SlackbotFrd::Bot
       created_at: created_at,
       channel: channel,
       channel_id: channel_id,
-      timestamp: timestamp,
+      ts: ts,
       content: message
     )
   end
