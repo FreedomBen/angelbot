@@ -36,11 +36,12 @@ module Confluence
                                           timeout: 5).body)
     end
 
-    def prepend_content(page_id:, user:, channel:, channel_id:, timestamp:, content:)
-      @user = user
+    def prepend_content(page_id:, author:, created_at:, channel:, channel_id:, ts:, content:)
+      @author = author
+      @created_at = created_at
       @channel = channel
       @channel_id = channel_id
-      @timestamp = timestamp
+      @ts = ts
       @page = get page_id
 
       update(
@@ -83,7 +84,7 @@ module Confluence
     def prepended_html(content)
       "
         <p>
-          <span style='font-size: 12.0px;font-weight: bold;'>Posted by #{@user} in ##{@channel} on <a href='#{slack_url(@channel_id, @timestamp)}'>#{Time.at(@timestamp).utc}</a></span>
+          <span style='font-size: 12.0px;font-weight: bold;'>Posted by #{@author} in ##{@channel} on <a href='#{slack_url(@channel_id, @ts)}'>#{@created_at}</a></span>
         </p>
         <blockquote>
           <p>#{content}</p>

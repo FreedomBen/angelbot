@@ -15,10 +15,11 @@ class PsaBot < SlackbotFrd::Bot
         SlackbotFrd::Log.info("Creating PSA for user '#{user}' in channel '#{channel}'")
 
         update_psa_page(
-          slack_connection: slack_connection,
-          posted_by: user,
+          author: slack_connection.user_id_to_name(user),
+          created_at: Time.at(timestamp).utc.to_s,
+          channel: slack_connection.channel_id_to_name(channel),
           channel_id: channel,
-          timestamp: timestamp,
+          ts: timestamp,
           message: message
         )
 
@@ -33,7 +34,7 @@ class PsaBot < SlackbotFrd::Bot
     end
   end
 
-  def update_psa_page(slack_connection:, posted_by:, channel_id:, timestamp:, message:)
+  def update_psa_page(author:, created_at:, channel:, channel_id:, ts:, message:)
     page_api = Confluence::Page.new(
       username: $slackbotfrd_conf['jira_username'],
       password: $slackbotfrd_conf['jira_password']
@@ -41,8 +42,9 @@ class PsaBot < SlackbotFrd::Bot
 
     page_api.prepend_content(
       page_id: PSA_PAGE_ID,
-      user: slack_connection.user_id_to_name(posted_by),
-      channel: slack_connection.channel_id_to_name(channel_id),
+      author: author,
+      created_at: created_at,
+      channel: channel,
       channel_id: channel_id,
       timestamp: timestamp,
       content: message
