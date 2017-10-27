@@ -116,7 +116,9 @@ module CodeReviewMaster
     def db
       unless @_db
         @_db = DynamoDB.new(botname: 'angelbot')
-        @_db.create_table(table_name, if_not_exist: true)
+        # For local development feel free to uncomment this to
+        # create the table. Production permissions do not allow.
+        # @_db.create_table(table_name, if_not_exist: true)
       end
       @_db
     end

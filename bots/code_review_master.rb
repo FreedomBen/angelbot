@@ -169,31 +169,31 @@ Outputs this text
   # Determine requests #
   ######################
   def add_reviewer_request?(message)
-    (message.downcase.match(/^#{CODEREVIEWMASTER} #{ADD_COMMAND} (.+)/) || [])[1]
+    (message.match(/^#{CODEREVIEWMASTER} #{ADD_COMMAND} (.+)/i) || [])[1]
   end
 
   def assign_review_request?(message)
-    (message.downcase.match(/^#{CODEREVIEWMASTER} g\/(\d+)/i) || [])[1]
+    (message.match(/^#{CODEREVIEWMASTER} g\/(\d+)/i) || [])[1]
   end
 
   def clear_reviewers_request?(message)
-    message.downcase.match(/^#{CODEREVIEWMASTER} #{CLEAR_COMMAND}$/)
+    message.match(/^#{CODEREVIEWMASTER} #{CLEAR_COMMAND}$/i)
   end
 
   def codereviewmaster_request?(message)
-    message.downcase.match(/^#{CODEREVIEWMASTER}/)
+    message.match(/^#{CODEREVIEWMASTER}/i)
   end
 
   def help_output_request?(message)
-    message.downcase.match(/^#{CODEREVIEWMASTER} #{HELP_COMMAND}$/)
+    message.match(/^#{CODEREVIEWMASTER} #{HELP_COMMAND}$/i)
   end
 
   def list_reviewers_request?(message)
-    message.downcase.match(/^#{CODEREVIEWMASTER} #{LIST_COMMAND}$/)
+    message.match(/^#{CODEREVIEWMASTER} #{LIST_COMMAND}$/i)
   end
 
   def remove_reviewer_request?(message)
-    (message.downcase.match(/^#{CODEREVIEWMASTER} #{REMOVE_COMMAND} (.+)/) || [])[1]
+    (message.match(/^#{CODEREVIEWMASTER} #{REMOVE_COMMAND} (.+)/i) || [])[1]
   end
 
   def codereviewmaster?(user, message, channel, timestamp, thread_ts)
