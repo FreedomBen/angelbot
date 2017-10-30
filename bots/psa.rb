@@ -6,7 +6,7 @@ class PsaBot < SlackbotFrd::Bot
   PSA_PAGE_ID = 134_557_264
 
   def contains_trigger(message)
-    message =~ /(p-?s-?a+y+|ps-?he+y+|psa!)/i
+    message =~ /(psa!)/i
   end
 
   def add_callbacks(slack_connection)
