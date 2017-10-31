@@ -28,12 +28,16 @@ module Confluence
         version: version
       ).to_json
 
-      JSON.parse(self.class.put("/#{id}", body: body,
-                                          basic_auth: basic_auth,
-                                          headers: {
-                                            'Content-Type' => 'application/json'
-                                          },
-                                          timeout: 5).body)
+      resp = self.class.put("/#{id}", body: body,
+                                      basic_auth: basic_auth,
+                                      headers: {
+                                        'Content-Type' => 'application/json'
+                                      },
+                                      timeout: 5).body
+
+      SlackbotFrd::Log.info('Received response from Confluence API when updating a page:')
+      SlackbotFrd::Log.info(resp)
+      JSON.parse(resp)
     end
 
     def prepend_content(page_id:, author:, created_at:, channel:, channel_id:, ts:, content:)

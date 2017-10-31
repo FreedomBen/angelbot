@@ -14,7 +14,7 @@ class PsaBot < SlackbotFrd::Bot
       if message && user != :bot && user != 'angel' && timestamp != thread_ts && contains_trigger(message)
         SlackbotFrd::Log.info("Creating PSA for user '#{user}' in channel '#{channel}'")
 
-        update_psa_page(
+        if update_psa_page(
           author: user,
           created_at: Time.at(timestamp.to_f).utc.to_s,
           channel: channel,
@@ -23,13 +23,14 @@ class PsaBot < SlackbotFrd::Bot
           message: message
         )
 
-        slack_connection.send_message(
-          channel: channel,
-          message: 'View the above message, as well as the other Public Service Announcements, here: https://instructure.atlassian.net/wiki/spaces/ENG/pages/134557264/PSAs',
-          thread_ts: thread_ts,
-          username: 'PS-Hey Bot',
-          avatar_emoji: ':robot-dance:'
-        )
+          slack_connection.send_message(
+            channel: channel,
+            message: 'View the above message, as well as the other Public Service Announcements, here: https://instructure.atlassian.net/wiki/spaces/ENG/pages/134557264/PSAs',
+            thread_ts: thread_ts,
+            username: 'PS-Hey Bot',
+            avatar_emoji: ':robot-dance:'
+          )
+        end
       end
     end
   end
@@ -49,5 +50,9 @@ class PsaBot < SlackbotFrd::Bot
       ts: ts,
       content: message
     )
+  rescue => e
+    SlackbotFrd::Log.error("ERROR: Failed to create PSA for user '#{user}' in channel '#{channel}' with error: #{e}")
+    SlackbotFrd::Log.error(e.message)
+    return false
   end
 end
