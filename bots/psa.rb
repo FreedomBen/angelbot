@@ -53,19 +53,20 @@ class PsaBot < SlackbotFrd::Bot
       username: $slackbotfrd_conf['jira_username'],
       password: $slackbotfrd_conf['jira_password']
     )
-
-    page_api.prepend_content(
-      page_id: PSA_PAGE_ID,
-      author: author,
-      created_at: created_at,
-      channel: channel,
-      channel_id: channel_id,
-      ts: ts,
-      content: message
-    )
-  rescue => e
-    SlackbotFrd::Log.error("ERROR: Failed to create PSA for user '#{author}' in channel '#{channel}' with error:")
-    SlackbotFrd::Log.error(e.message)
-    return false
+    begin
+      page_api.prepend_content(
+        page_id: PSA_PAGE_ID,
+        author: author,
+        created_at: created_at,
+        channel: channel,
+        channel_id: channel_id,
+        ts: ts,
+        content: message
+      )
+    rescue StandardError => e
+      SlackbotFrd::Log.error("ERROR: Failed to create PSA for user '#{author}' in channel '#{channel}' with error:")
+      SlackbotFrd::Log.error(e.message)
+      return false
+    end
   end
 end

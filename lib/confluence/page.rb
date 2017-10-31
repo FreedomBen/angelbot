@@ -68,7 +68,9 @@ module Confluence
         version: @page['version']['number'] + 1
       )
 
-      raise(ConfluenceError, resp['message']) unless resp['data']['successful']
+      raise(ConfluenceError, resp.dig('message')) unless resp.dig('data', 'successful')
+
+      !!resp
     end
 
     private
