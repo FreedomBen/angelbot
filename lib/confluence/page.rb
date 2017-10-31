@@ -36,7 +36,7 @@ module Confluence
                                       },
                                       timeout: 5).body
 
-      SlackbotFrd::Log.info('Received response from Confluence API when updating a page:')
+      SlackbotFrd::Log.info('Got response from Confluence when updating a page:')
       SlackbotFrd::Log.info(resp)
       JSON.parse(resp)
     end
@@ -84,7 +84,7 @@ module Confluence
       {
         body: {
           storage: {
-            value: content.to_s,
+            value: content,
             representation: 'storage'
           }
         },
@@ -92,7 +92,7 @@ module Confluence
           number: version
         },
         type: 'page',
-        title: title.to_s
+        title: title
       }
     end
 
@@ -109,7 +109,7 @@ module Confluence
           <p>#{content}</p>
         </blockquote>
         <br /><br />
-      ".to_json
+      ".inspect
       @page['body']['storage']['value'].prepend(new_psa)
     end
   end
