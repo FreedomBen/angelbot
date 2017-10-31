@@ -1,4 +1,5 @@
 require 'slackbot_frd'
+require 'slack_markdown'
 
 require_relative '../lib/confluence/page'
 
