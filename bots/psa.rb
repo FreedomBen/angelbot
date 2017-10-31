@@ -14,13 +14,24 @@ class PsaBot < SlackbotFrd::Bot
       if message && user != :bot && user != 'angel' && timestamp != thread_ts && contains_trigger(message)
         SlackbotFrd::Log.info("Creating PSA for user '#{user}' in channel '#{channel}'")
 
+        # Parse Slack-flavored Markdown to HTML, replacing channel and user IDs
+        # with their respective display names
+        html_message = SlackMarkdown::Processor.new(
+          on_slack_channel_id: lambda { |uid|
+            return { url: "https://instructure.slack.com/messages/#{uid}", text: slack_connection.channel_id_to_name(uid) }
+          },
+          on_slack_user_id: lambda { |uid|
+            return { url: "https://instructure.slack.com/team/#{uid}", text: slack_connection.user_id_to_name(uid) }
+          }
+        ).call(message)[:output].to_s
+
         if update_psa_page(
           author: user,
           created_at: Time.at(timestamp.to_f).utc.to_s,
           channel: channel,
           channel_id: slack_connection.channel_name_to_id(channel),
           ts: timestamp,
-          message: message
+          message: html_message
         )
 
           slack_connection.send_message(

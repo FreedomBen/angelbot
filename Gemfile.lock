@@ -20,12 +20,17 @@ GEM
     curb (0.9.3)
     domain_name (0.5.20160615)
       unf (>= 0.0.5, < 1.0.0)
+    escape_utils (1.0.1)
     eventmachine (1.2.2)
     faye-websocket (0.10.6)
       eventmachine (>= 0.12.0)
       websocket-driver (>= 0.5.1)
     file-append (0.0.1)
     fuzzy_match (2.1.0)
+    gemoji (2.1.0)
+    html-pipeline (2.7.1)
+      activesupport (>= 2)
+      nokogiri (>= 1.4)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     httparty (0.13.3)
@@ -60,6 +65,10 @@ GEM
       mechanize (>= 1.0.0)
       require_all (>= 1.1.0)
     safe_yaml (1.0.4)
+    slack_markdown (0.2.0)
+      escape_utils (~> 1.0.1)
+      gemoji (~> 2.1.0)
+      html-pipeline (~> 2.0)
     slackbot_frd (0.3.3)
       activesupport (~> 4.2)
       colorize (~> 0.7)
@@ -93,9 +102,10 @@ DEPENDENCIES
   fuzzy_match
   json
   ruby-hackernews
+  slack_markdown
   slackbot_frd
   sqlite3
   thor
 
 BUNDLED WITH
-   1.12.5
+   1.16.0.pre.3
