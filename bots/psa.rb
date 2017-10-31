@@ -51,7 +51,7 @@ class PsaBot < SlackbotFrd::Bot
       content: message
     )
   rescue => e
-    SlackbotFrd::Log.error("ERROR: Failed to create PSA for user '#{user}' in channel '#{channel}' with error: #{e}")
+    SlackbotFrd::Log.error("ERROR: Failed to create PSA for user '#{author}' in channel '#{channel}' with error: #{e}")
     SlackbotFrd::Log.error(e.message)
     return false
   end
