@@ -7,6 +7,7 @@ module Confluence
   class Page
     include HTTParty
     base_uri "#{Confluence.base_url}/content"
+    class ConfluenceError < StandardError; end
 
     def initialize(username:, password:)
       @username = username
@@ -48,12 +49,14 @@ module Confluence
       @ts = ts
       @page = get page_id
 
-      update(
+      resp = update(
         page_id,
         title: @page['title'],
         content: prepended_html(content),
         version: @page['version']['number'] + 1
       )
+
+      raise(ConfluenceError, resp['message']) unless resp['data']['successful']
     end
 
     private
