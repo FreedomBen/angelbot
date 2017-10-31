@@ -47,12 +47,24 @@ module Confluence
       @channel = channel
       @channel_id = channel_id
       @ts = ts
-      @page = get page_id
+      @page = get(page_id)
+      @content = prepended_html(content)
+
+      SlackbotFrd::Log.info('Prepending Confluence page using the data:')
+      SlackbotFrd::Log.info("
+        @author: #{@author}
+        @created_at: #{@created_at}
+        @channel: #{@channel}
+        @channel_id: #{@channel_id}
+        @ts: #{@ts}
+        @page: #{@page}
+        @content: #{@content}
+      ")
 
       resp = update(
         page_id,
         title: @page['title'],
-        content: prepended_html(content),
+        content: @content,
         version: @page['version']['number'] + 1
       )
 
