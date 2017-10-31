@@ -101,7 +101,7 @@ module Confluence
     end
 
     def prepended_html(content)
-      "
+      new_psa = "
         <p>
           <span style='font-size: 12.0px;font-weight: bold;'>Posted by #{@author} in ##{@channel} on <a href='#{slack_url(@channel_id, @ts)}'>#{@created_at}</a></span>
         </p>
@@ -109,8 +109,8 @@ module Confluence
           <p>#{content}</p>
         </blockquote>
         <br /><br />
-        #{@page['body']['storage']['value']}
       ".to_json
+      @page['body']['storage']['value'].prepend(new_psa)
     end
   end
 end
