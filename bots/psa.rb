@@ -23,7 +23,8 @@ class PsaBot < SlackbotFrd::Bot
           },
           on_slack_user_id: lambda { |uid|
             return { url: "https://instructure.slack.com/team/#{uid}", text: slack_connection.user_id_to_name(uid) }
-          }
+          },
+          asset_root: '/'
         ).call(message)[:output].to_s
 
         if update_psa_page(
