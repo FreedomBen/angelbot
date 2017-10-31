@@ -109,7 +109,7 @@ module Confluence
           <p>#{content}</p>
         </blockquote>
         <br /><br />
-      ".inspect
+      "
       @page['body']['storage']['value'].prepend(new_psa)
     end
   end
