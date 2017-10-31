@@ -110,7 +110,7 @@ module Confluence
         </blockquote>
         <br /><br />
         #{@page['body']['storage']['value']}
-      "
+      ".to_json
     end
   end
 end
