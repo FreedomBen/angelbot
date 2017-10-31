@@ -41,7 +41,7 @@ class CodeReviewMasterBot < SlackbotFrd::Bot
         ###################
         if (to_remove = remove_reviewer_request?(message))
           SlackbotFrd::Log.debug(
-            "user '#{user}' in channel '#{channel}' is adding the reviewer #{to_remove}"
+            "user '#{user}' in channel '#{channel}' is removing the reviewer #{to_remove}"
           )
           if data.remove_reviewer!(to_remove)
             m.send_message("Removed #{to_remove} from the list of reviewers :shipit:")
@@ -92,8 +92,10 @@ Hi! I help assign code reviewers.
 
 `codereviewmaster g/123456`
 
-Assigns a code reviewer to the provided gerrit change id. Posts in slack &
-assigns a reviewer in gerrit (assuming gerrit is configured).
+Assigns a code reviewer to the provided gerrit change id. It pulls possible
+reviewers from a list it maintains intnerally (see below for reviewer list
+managements.) Posts in slack & assigns a reviewer in gerrit (assuming gerrit
+is configured).
 
 *List reviewers*
 
