@@ -68,9 +68,12 @@ module Confluence
         version: @page['version']['number'] + 1
       )
 
-      raise(ConfluenceError, resp.dig('message')) unless resp.dig('data', 'successful')
-
-      !!resp
+      # Deceivingly enough, successful updates won't have
+      # this key/value pair; failed requests come back
+      # as `false` here
+      success = resp.dig('data', 'successful').nil?
+      raise(ConfluenceError, resp.dig('message')) unless success
+      success
     end
 
     private
