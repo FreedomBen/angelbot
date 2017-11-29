@@ -22,7 +22,7 @@ class BitcoinBot < SlackbotFrd::Bot
   def value_to_string(value)
     bitcoin_value = value['USD']['last']
     inst_shares_value = inst_value['latestPrice']
-    "Currently:  *1* BTC == $*#{bitcoin_value}* _USD_ (or ~#{(bitcoin_value / inst_shares_value).ceil} shares of INST)"
+    "Currently:  *1* BTC == $*#{"%.2f" % bitcoin_value}* _USD_ (or ~#{(bitcoin_value / inst_shares_value).ceil} shares of INST @ $#{"%.2f" % inst_shares_value})"
   end
 
   def contains_trigger(message)
