@@ -8,7 +8,7 @@ require_relative '../lib/gerrit-jira-translator/data'
 
 class GerritJiraTranslator < SlackbotFrd::Bot
   def whitelisted_prefixes
-    'ADMIN|AMS|ARC|BR|CAR|CAT|CM|CNVS|COMMS|CORE|CYOE|DS|EISR|FALCOR|GOOF|GRADE|IMPENG|INSTUI|ITSD|MBL|MC|NTRS|OPS|OUT|PANDA|PFS|PLAT|QO|QUIZ|RD|SE|SEC|TALENT|TS'
+    'ADMIN|AMS|ARC|BR|BUC|CAR|CAT|CM|CNVS|COMMS|CORE|CYOE|DS|EISR|FALCOR|GOOF|GRADE|IMPENG|INSTUI|ITSD|MBL|MC|NTRS|OPS|OUT|PANDA|PFS|PLAT|QO|QUIZ|RD|SE|SEC|TALENT|TS'
   end
 
   def add_callbacks(slack_connection)
