@@ -48,6 +48,7 @@ class Feedback < SlackbotFrd::Bot
   end
 
   def parse_issues(issues_json)
+    parser = GerritJiraTranslator.new
     messages = []
     issues = issues_json["issues"]
     SlackbotFrd::Log.info("Parsing #{issues_json} for feedback:")
@@ -56,7 +57,16 @@ class Feedback < SlackbotFrd::Bot
       SlackbotFrd::Log.info("Parsing issue:")
       SlackbotFrd::Log.info(issue)
       f = issue["fields"]
-      messages << "#{issue["key"]} - #{f["summary"]}\nAssignee: #{f["assignee"]["displayName"]}\nPriority: #{f["priority"]["name"]}"
+      gerrits = f[GERRIT_ID_FIELD]
+                .split
+                .select {|s| s =~ /http/}
+                .map {|url| url.split("/").last}
+      jira = {prefix: issue["key"].split("-").first, number: issue["key"].split("-").last}
+      messages << "#{parser.priority_to_emoji(f["priority"]["name"])} #{parser.jira_link(jira)} - #{f["summary"]}\n"
+      messages << "Assignee: #{f["assignee"]["displayName"]}\n"
+      gerrits.each do |gerrit|
+        messages << ":gerrit: :  <#{parser.gerrit_url(gerrit)}|g/#{gerrit}> : <#{parser.gerrit_mobile_url(gerrit)}|:iphone:>\n"
+      end
     end
     messages.join("\n")
   end
