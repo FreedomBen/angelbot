@@ -16,7 +16,7 @@ module Jira
     end
 
     def get(jql)
-      JSON.parse(self.class.get("/?fields=#{GERRIT_ID_FIELD},summary&jql=#{jql}", basic_auth: basic_auth, timeout: 5).body)
+      JSON.parse(self.class.get("/?fields=#{GERRIT_ID_FIELD},summary,assignee,priority&jql=#{jql}", basic_auth: basic_auth, timeout: 5).body)
     rescue JSON::ParserError => _e
       { error: 'Jira returned invalid JSON (probably an error page in HTML :facepalm: )' }
     rescue StandardError => _e

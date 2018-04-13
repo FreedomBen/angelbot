@@ -50,7 +50,11 @@ class Feedback < SlackbotFrd::Bot
   def parse_issues(issues_json)
     messages = []
     issues = issues_json["issues"]
+    SlackbotFrd::Log.info("Parsing #{issues_json} for feedback:")
+    SlackbotFrd::Log.info(issues)
     issues.each do |issue|
+      SlackbotFrd::Log.info("Parsing issue:")
+      SlackbotFrd::Log.info(issue)
       f = issue["fields"]
       messages << "#{issue["key"]} - #{f["summary"]}\nAssignee: #{f["assignee"]["displayName"]}\nPriority: #{f["priority"]["name"]}"
     end
