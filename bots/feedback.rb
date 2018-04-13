@@ -39,7 +39,7 @@ class Feedback < SlackbotFrd::Bot
           slack_connection.send_message(
             channel: channel,
             message: parse_issues(issues),
-            parse: 'full',
+            parse: 'none',
             thread_ts: thread_ts
           )
         end
@@ -62,12 +62,12 @@ class Feedback < SlackbotFrd::Bot
                 .select {|s| s =~ /http/}
                 .map {|url| url.split("/").last}
       jira = {prefix: issue["key"].split("-").first, number: issue["key"].split("-").last}
-      messages << "#{parser.priority_to_emoji(f["priority"]["name"])} #{parser.jira_link(jira)} - #{f["summary"]}\n"
-      messages << "Assignee: #{f["assignee"]["displayName"]}\n"
+      messages << "#{parser.priority_str(issue)} #{parser.jira_link(jira)} - #{f["summary"]}\n"
+      messages << "Assignee: #{parser.assigned_to_str(issue)}\n"
       gerrits.each do |gerrit|
         messages << ":gerrit: :  <#{parser.gerrit_url(gerrit)}|g/#{gerrit}> : <#{parser.gerrit_mobile_url(gerrit)}|:iphone:>\n"
       end
     end
-    messages.join("\n")
+    messages.join("\n\n")
   end
 end
