@@ -67,7 +67,8 @@ class Feedback < SlackbotFrd::Bot
       gerrits.each do |gerrit|
         messages << ":gerrit: :  <#{parser.gerrit_url(gerrit)}|g/#{gerrit}> : <#{parser.gerrit_mobile_url(gerrit)}|:iphone:>\n"
       end
+      messages << "\n"
     end
-    messages.join("\n\n")
+    messages.join("\n")
   end
 end
