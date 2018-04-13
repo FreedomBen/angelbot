@@ -27,6 +27,7 @@ class Feedback < SlackbotFrd::Bot
   end
 
   def handle_feedback_jiras(slack_connection, user, channel, message, thread_ts)
+    parser = GerritJiraTranslator.new
     search_api = Jira::Search.new(
       username: $slackbotfrd_conf['jira_username'],
       password: $slackbotfrd_conf['jira_password']
@@ -34,7 +35,7 @@ class Feedback < SlackbotFrd::Bot
     /!feedback\s+(.+)$/i.match(message) do |matches|
       matches[1].split.each do |project|
         if project =~ /#{parser.whitelisted_prefixes}/i
-          issues = search_api.get feedback_jql( project)
+          issues = search_api.get feedback_jql(project)
           slack_connection.send_message(
             channel: channel,
             message: parse_issues(issues),
