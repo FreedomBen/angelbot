@@ -32,7 +32,7 @@ class Feedback < SlackbotFrd::Bot
       password: $slackbotfrd_conf['jira_password']
     )
     /!feedback\s+(.+)$/i.match(message) do |matches|
-      matches.split.each do |project|
+      matches[1].split.each do |project|
         if project =~ /#{parser.whitelisted_prefixes}/i
           issues = search_api.get feedback_jql( project)
           slack_connection.send_message(
