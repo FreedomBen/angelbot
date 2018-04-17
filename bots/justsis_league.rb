@@ -39,7 +39,7 @@ class Justsis_League < SlackbotFrd::Bot
         slack_connection.send_message(
           channel: channel,
           message: format_message(message, image),
-          parse: "none",
+          parse: "full",
           thread_ts: thread_ts,
         )
       end
