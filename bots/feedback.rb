@@ -20,7 +20,7 @@ class Feedback < SlackbotFrd::Bot
 
   def add_callbacks(slack_connection)
     slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
-      if message && user != :bot && user != 'angel' && timestamp != thread_ts && contains_trigger(message)
+      if message && user != 'angel' && timestamp != thread_ts && contains_trigger(message)
         handle_feedback_jiras(slack_connection, user, channel, message, thread_ts)
       end
     end
