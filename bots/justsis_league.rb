@@ -11,6 +11,7 @@ class Feedback < SlackbotFrd::Bot
   def add_callbacks(slack_connection)
     slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if message && user != "angel" && timestamp != thread_ts && contains_trigger(message)
+        SlackbotFrd::Log.info("Trigger found: '#{message}'. Parsing.")
         handle_trigger(slack_connection, user, channel, message, thread_ts)
       end
     end
@@ -20,6 +21,7 @@ class Feedback < SlackbotFrd::Bot
     TRIGGER.match(message) do |matches|
       matches[1].split.each do |priority|
         priority.gsub!(/[^\w\s]/, "")
+        SlackbotFrd::Log.info("Priority for justsis_league trigger: #{priority}")
         next unless priority.upcase =~ /(NUCLEAR|HIGH|MEDIUM)/
 
         case priority.upcase
