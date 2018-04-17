@@ -34,6 +34,7 @@ class Feedback < SlackbotFrd::Bot
     )
     /!feedback\s+(.+)$/i.match(message) do |matches|
       matches[1].split.each do |project|
+        project.gsub!(/[^\w\s]/, '')
         if project =~ /#{parser.whitelisted_prefixes}/i
           issues = search_api.get feedback_jql(project)
           slack_connection.send_message(
