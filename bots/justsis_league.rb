@@ -1,7 +1,7 @@
 require "slackbot_frd"
 require "securerandom"
 
-class Feedback < SlackbotFrd::Bot
+class Justsis_League < SlackbotFrd::Bot
   TRIGGER = /SIS-(NUCLEAR|HIGH|MEDIUM)/i
 
   def contains_trigger(message)

@@ -64,7 +64,7 @@ class Feedback < SlackbotFrd::Bot
                 .map {|url| url.split("/").last}
       jira = {prefix: issue["key"].split("-").first, number: issue["key"].split("-").last}
       messages << "#{parser.priority_str(issue)} #{parser.jira_link(jira)} - #{f["summary"]}"
-      messages << "Assignee: #{parser.assigned_to_str(issue)}"
+      messages << "*Assigned to*: #{parser.assigned_to_str(issue)}"
       gerrits.each do |gerrit|
         messages << ":gerrit: :  <#{parser.gerrit_url(gerrit)}|g/#{gerrit}> : <#{parser.gerrit_mobile_url(gerrit)}|:iphone:>"
       end
