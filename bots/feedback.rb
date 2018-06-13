@@ -52,29 +52,25 @@ class Feedback < SlackbotFrd::Bot
     parser = GerritJiraTranslator.new
     messages = []
     issues = issues_json["issues"]
-    if !issues.nil?
-      SlackbotFrd::Log.info("Parsing #{issues_json} for feedback:")
-      SlackbotFrd::Log.info(issues)
-      issues.each do |issue|
-        SlackbotFrd::Log.info("Parsing issue:")
-        SlackbotFrd::Log.info(issue)
-        f = issue["fields"]
-        gerrits = f[GERRIT_ID_FIELD]
-                  .split
-                  .select {|s| s =~ /http/}
-                  .map {|url| url.split("/").last}
-        jira = {prefix: issue["key"].split("-").first, number: issue["key"].split("-").last}
-        messages << "#{parser.priority_str(issue)} #{parser.jira_link(jira)} - #{f["summary"]}"
-        messages << "*Assigned to*: #{parser.assigned_to_str(issue)}"
-        gerrits.each do |gerrit|
-          messages << ":gerrit: :  <#{parser.gerrit_url(gerrit)}|g/#{gerrit}> : <#{parser.gerrit_mobile_url(gerrit)}|:iphone:>"
-        end
-        messages << "\n"
+    SlackbotFrd::Log.info("Parsing #{issues_json} for feedback:")
+    SlackbotFrd::Log.info(issues)
+    issues.each do |issue|
+      SlackbotFrd::Log.info("Parsing issue:")
+      SlackbotFrd::Log.info(issue)
+      f = issue["fields"]
+      gerrits = f[GERRIT_ID_FIELD]
+                .split
+                .select {|s| s =~ /http/}
+                .map {|url| url.split("/").last}
+      jira = {prefix: issue["key"].split("-").first, number: issue["key"].split("-").last}
+      messages << "#{parser.priority_str(issue)} #{parser.jira_link(jira)} - #{f["summary"]}"
+      messages << "*Assigned to*: #{parser.assigned_to_str(issue)}"
+      gerrits.each do |gerrit|
+        messages << ":gerrit: :  <#{parser.gerrit_url(gerrit)}|g/#{gerrit}> : <#{parser.gerrit_mobile_url(gerrit)}|:iphone:>"
       end
-    else
-      messages << "No issues awaiting feedback found for #{project}"
+      messages << "\n"
     end
-
+    messages << "No issues awaiting feedback found for #{project}" if messages.empty?
     messages.join("\n")
   end
 end
