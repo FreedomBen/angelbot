@@ -39,7 +39,7 @@ class Feedback < SlackbotFrd::Bot
           issues = search_api.get feedback_jql(project)
           slack_connection.send_message(
             channel: channel,
-            message: parse_issues(issues),
+            message: parse_issues(issues, project),
             parse: 'none',
             thread_ts: thread_ts
           )
@@ -48,28 +48,32 @@ class Feedback < SlackbotFrd::Bot
     end
   end
 
-  def parse_issues(issues_json)
+  def parse_issues(issues_json, project)
     parser = GerritJiraTranslator.new
     messages = []
-    issues = issues_json["issues"]
-    SlackbotFrd::Log.info("Parsing #{issues_json} for feedback:")
-    SlackbotFrd::Log.info(issues)
-    issues.each do |issue|
-      SlackbotFrd::Log.info("Parsing issue:")
-      SlackbotFrd::Log.info(issue)
-      f = issue["fields"]
-      gerrits = f[GERRIT_ID_FIELD]
-                .split
-                .select {|s| s =~ /http/}
-                .map {|url| url.split("/").last}
-      jira = {prefix: issue["key"].split("-").first, number: issue["key"].split("-").last}
-      messages << "#{parser.priority_str(issue)} #{parser.jira_link(jira)} - #{f["summary"]}"
-      messages << "*Assigned to*: #{parser.assigned_to_str(issue)}"
-      gerrits.each do |gerrit|
-        messages << ":gerrit: :  <#{parser.gerrit_url(gerrit)}|g/#{gerrit}> : <#{parser.gerrit_mobile_url(gerrit)}|:iphone:>"
+    if (issues = issues_json["issues"])
+      SlackbotFrd::Log.info("Parsing #{issues_json} for feedback:")
+      SlackbotFrd::Log.info(issues)
+      issues.each do |issue|
+        SlackbotFrd::Log.info("Parsing issue:")
+        SlackbotFrd::Log.info(issue)
+        f = issue["fields"]
+        gerrits = f[GERRIT_ID_FIELD]
+                  .split
+                  .select {|s| s =~ /http/}
+                  .map {|url| url.split("/").last}
+        jira = {prefix: issue["key"].split("-").first, number: issue["key"].split("-").last}
+        messages << "#{parser.priority_str(issue)} #{parser.jira_link(jira)} - #{f["summary"]}"
+        messages << "*Assigned to*: #{parser.assigned_to_str(issue)}"
+        gerrits.each do |gerrit|
+          messages << ":gerrit: :  <#{parser.gerrit_url(gerrit)}|g/#{gerrit}> : <#{parser.gerrit_mobile_url(gerrit)}|:iphone:>"
+        end
+        messages << "\n"
       end
-      messages << "\n"
+    else
+      messages << "No issues awaiting feedback found for #{project}"
     end
+
     messages.join("\n")
   end
 end
