@@ -51,7 +51,8 @@ class Feedback < SlackbotFrd::Bot
   def parse_issues(issues_json, project)
     parser = GerritJiraTranslator.new
     messages = []
-    if (issues = issues_json["issues"])
+    issues = issues_json["issues"]
+    if !issues.nil?
       SlackbotFrd::Log.info("Parsing #{issues_json} for feedback:")
       SlackbotFrd::Log.info(issues)
       issues.each do |issue|
