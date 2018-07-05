@@ -50,7 +50,7 @@ class Roy < SlackbotFrd::Bot
 
   def response(sc:, user:, message:)
     return nil unless message
-    return OFFLINE_MESSAGE unless during_business_hours?
+    return OFFLINE_MESSAGE if (contains_ticket?(m) || might_need_suggestion?(m)) && !during_business_hours?
     m = message.downcase
     if contains_ticket?(m)
       SlackbotFrd::Log.info("User '#{user}' is attempting to open an IT ticket through Roy. message: '#{message}'")
