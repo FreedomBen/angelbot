@@ -3,6 +3,10 @@ require 'net/http'
 require 'uri'
 
 class BitcoinBot < SlackbotFrd::Bot
+  def inst_endpoint
+    'https://api.iextrading.com/1.0/stock/inst/quote'
+  end
+
   def endpoint
     'https://blockchain.info/ticker'
   end
@@ -11,9 +15,14 @@ class BitcoinBot < SlackbotFrd::Bot
     JSON.parse(Net::HTTP.get_response(URI.parse(endpoint)).body)
   end
 
+  def inst_value
+    JSON.parse(Net::HTTP.get_response(URI.parse(inst_endpoint)).body)
+  end
+
   def value_to_string(value)
-    # "Currently:  *1* BTC == $ *#{value['USD']['last']}* _USD_\n     $ *#{value['AUD']['last']}* _AUD_ || #{value['EUR']['symbol']} *#{value['EUR']['last']}* _EUR_ || $ *#{value['CAD']['last']}* _CAD_"
-    "Currently:  *1* BTC == $*#{value['USD']['last']}* _USD_"
+    bitcoin_value = value['USD']['last']
+    inst_shares_value = inst_value['latestPrice']
+    "Currently:  *1* BTC == $*#{"%.2f" % bitcoin_value}* _USD_ (or ~#{(bitcoin_value / inst_shares_value).ceil} shares of INST @ $#{"%.2f" % inst_shares_value})"
   end
 
   def contains_trigger(message)
