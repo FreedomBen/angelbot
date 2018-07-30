@@ -18,6 +18,10 @@ class Feedback < SlackbotFrd::Bot
     "project = #{project} AND status = Feedback ORDER BY updated ASC"
   end
 
+  def feedback_fields
+    "#{GERRIT_ID_FIELD},summary,assignee,priority"
+  end
+
   def add_callbacks(slack_connection)
     slack_connection.on_message do |user:, channel:, message:, timestamp:, thread_ts:|
       if message && user != 'angel' && timestamp != thread_ts && contains_trigger(message)
@@ -29,19 +33,19 @@ class Feedback < SlackbotFrd::Bot
   def handle_feedback_jiras(slack_connection, user, channel, message, thread_ts)
     parser = GerritJiraTranslator.new
     search_api = Jira::Search.new(
-      username: $slackbotfrd_conf['jira_username'],
-      password: $slackbotfrd_conf['jira_password']
+        username: $slackbotfrd_conf['jira_username'],
+        password: $slackbotfrd_conf['jira_password']
     )
     /!feedback\s+(.+)$/i.match(message) do |matches|
       matches[1].split.each do |project|
         project.gsub!(/[^\w\s]/, '')
         if project =~ /#{parser.whitelisted_prefixes}/i
-          issues = search_api.get feedback_jql(project)
+          issues = search_api.get(feedback_jql(project), feedback_fields)
           slack_connection.send_message(
-            channel: channel,
-            message: parse_issues(issues, project),
-            parse: 'none',
-            thread_ts: thread_ts
+              channel: channel,
+              message: parse_issues(issues, project),
+              parse: 'none',
+              thread_ts: thread_ts
           )
         end
       end
@@ -59,9 +63,9 @@ class Feedback < SlackbotFrd::Bot
       SlackbotFrd::Log.info(issue)
       f = issue["fields"]
       gerrits = f[GERRIT_ID_FIELD]
-                .split
-                .select {|s| s =~ /http/}
-                .map {|url| url.split("/").last}
+                    .split
+                    .select {|s| s =~ /http/}
+                    .map {|url| url.split("/").last}
       jira = {prefix: issue["key"].split("-").first, number: issue["key"].split("-").last}
       messages << "#{parser.priority_str(issue)} #{parser.jira_link(jira)} - #{f["summary"]}"
       messages << "*Assigned to*: #{parser.assigned_to_str(issue)}"
